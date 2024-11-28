@@ -79,7 +79,7 @@ const login = async (userRequest,role,res) => {
           mobileNumber: user.mobileNumber,
           email: user.email,
         },
-        SECRET,
+        "secret",
         { expiresIn: "7 days" }
       );
 
