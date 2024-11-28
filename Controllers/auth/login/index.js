@@ -39,7 +39,9 @@ const login = async (userRequest,role,res) => {
 
     
     
-    let user = await User.findOne({ mobileNumber });
+    let user = await User.findOne({mobileNumber});
+    console.log("users",user);
+    
     
 
     if (!user) {
