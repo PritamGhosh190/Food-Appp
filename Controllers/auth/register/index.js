@@ -32,6 +32,8 @@ const MSG = {
  */
 const register = async (userRequest, role, res) => {
   try {
+    console.log("dxc",userRequest);
+    
     const signupRequest = await signupSchema.validateAsync(userRequest);
     // Validate the mobileNumberNotTaken
     let mobileNumberNotTaken = await validateUser(signupRequest.mobileNumber);
