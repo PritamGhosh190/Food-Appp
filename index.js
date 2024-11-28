@@ -7,6 +7,7 @@ const { connect } = require("mongoose");
 const { success, error } = require("consola");
 const path = require('path');
 const axios = require('axios');
+const multer = require('multer');
 
 const apiUrl = 'http://web.sensegeofence.com:3006/api';
 const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
@@ -22,8 +23,8 @@ app.use(
     extended: true,
   })
 );
-app.use(upload()); //file upload
-// app.use('/upload', express.static(path.join(__dirname, 'uploads')));
+// app.use(upload()); //file upload
+app.use('/Upload', exp.static(path.join(__dirname, 'Upload')));
 
 // app.use(passport.initialize());
 // require("./middlewares/passport")(passport);
@@ -78,6 +79,9 @@ const startApp = async () => {
 
 
 startApp();
+
+
+
 
 // axios.get(apiUrl)
 //   .then(response => {

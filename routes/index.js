@@ -3,6 +3,7 @@ const {userAuth, checkRole, serializeUser} = require('../Controllers/auth')
 const {ROLE} = require('../config/roles')
 const passport = require('passport')
 
+
 router.get('/', (req, res) => {
   res.send('Api running...')
 })
@@ -30,6 +31,8 @@ router.use(
 router.use(
   '/food',require('./food')
 )
+router.use('/restaurant',require('./restaurant')
+)
 
 // router.use(
 //   '/charts',
@@ -42,6 +45,5 @@ router.use(
 // router.use('/menu', require('./menu'))
 
 router.use('/roles', userAuth, checkRole([ROLE.admin]), require('./roles'))
-
 
 module.exports = router
