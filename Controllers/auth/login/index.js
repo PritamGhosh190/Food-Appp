@@ -67,6 +67,8 @@ const login = async (userRequest,role,res) => {
     // That means user is existing and trying to signin from the right portal
     // Now check for the password
     let isMatch = await bcrypt.compare(password, user.password);
+    console.log("is matched",isMatch);
+    
     if (isMatch) {
 
       // Sign in the token and issue it to the user
