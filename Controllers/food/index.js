@@ -1,6 +1,6 @@
 // controllers/foodController.js
 const Food = require('../../models/Food');
-
+require('dotenv').config(); 
 // Create a new food detail
 exports.createFood = async (req, res) => {
   try {
@@ -47,6 +47,11 @@ exports.getAllFoods = async (req, res) => {
 
     // Query the database with the filter object
     const foods = await Food.find(filter);
+    const resultFood=foods.map(food => {
+      // const updatedPath = filePath.replace(/\\+/g, '/'); 
+      food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+      return restaurant;
+    });
 
     if (foods.length === 0) {
       return res.status(404).json({ message: 'No food details found matching the filters' });
