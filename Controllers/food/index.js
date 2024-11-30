@@ -4,7 +4,7 @@ require('dotenv').config();
 // Create a new food detail
 exports.createFood = async (req, res) => {
   try {
-    console.log("hiiiii",req.body);
+    // console.log("hiiiii",req.body);
     
     const { name, restaurant, distance, price, rating, category, type,cuisineType } = req.body;
     const image = req.file.path; // Get image path from multer
@@ -24,7 +24,7 @@ exports.createFood = async (req, res) => {
     await newFood.save();
     res.status(201).json({ message: 'Food detail created successfully', food: newFood });
   } catch (error) {
-    console.log("errror",error);
+    // console.log("errror",error);
     
     res.status(400).json({ message: 'Error creating food detail', error: error.message });
   }

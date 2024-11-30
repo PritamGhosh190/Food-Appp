@@ -3,7 +3,7 @@ require('dotenv').config();  // Assuming the model is named 'Food.js'
 
 // Assuming the 'uploads' folder is publicly accessible via URL
 
-console.log(process.env.IMAGEURL);
+// console.log(process.env.IMAGEURL);
 
 exports.createrestaurant = async (req, res) => {
   try {
@@ -28,7 +28,7 @@ exports.createrestaurant = async (req, res) => {
     const savedrestaurant = await newrestaurant.save();
     res.status(201).json(savedrestaurant);
   } catch (err) {
-    console.log("error",err);
+    // console.log("error",err);
     
     res.status(500).json({ message: 'Error creating restaurant', error: err });
   }
@@ -71,7 +71,7 @@ exports.getAllRestaurants = async (req, res) => {
     // Return the updated restaurant data with full image URLs
     res.status(200).json(restaurantsWithImages);
   } catch (err) {
-    console.log("Error fetching restaurants:", err);
+    // console.log("Error fetching restaurants:", err);
     res.status(500).json({ message: 'Error fetching restaurants', error: err.message });
   }
 };
