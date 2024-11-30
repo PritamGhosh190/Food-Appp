@@ -2,6 +2,8 @@
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
+require('dotenv').config();  // Assuming the model is named 'Food.js'
+
 
 // Imports
 const { SECRET, TOKEN_EXPIRATION } = require("../../../config");
@@ -29,7 +31,7 @@ const MSG = {
  * @return {Object} contains 3 attributes {error/success message : string, success : boolean, reason: string}.
  */
 const login = async (userRequest,role,res) => {
-  console.log("reqdata111",userRequest);
+  // console.log("reqdata111",userRequest);
   try {
     
     const loginRequest = await loginSchema.validateAsync(userRequest);
@@ -40,7 +42,7 @@ const login = async (userRequest,role,res) => {
     
     
     let user = await User.findOne({mobileNumber});
-    console.log("users",user);
+    // console.log("users",user);
     
     
 
@@ -52,7 +54,7 @@ const login = async (userRequest,role,res) => {
       });
     }
 
-    console.log("users",user);
+    // console.log("users",user);
     // We will check the role
     if (user.role !== role) {
       return res.status(403).json({
@@ -67,7 +69,7 @@ const login = async (userRequest,role,res) => {
     // That means user is existing and trying to signin from the right portal
     // Now check for the password
     let isMatch = await bcrypt.compare(password, user.password);
-    console.log("is matched",isMatch);
+    // console.log("is matched",isMatch);
     
     if (isMatch) {
 
@@ -79,7 +81,8 @@ const login = async (userRequest,role,res) => {
           mobileNumber: user.mobileNumber,
           email: user.email,
         },
-        "secret",
+        process.env.SECRET
+        ,
         { expiresIn: "7 days" }
       );
 
@@ -87,7 +90,7 @@ const login = async (userRequest,role,res) => {
         mobileNumber: user.mobileNumber,
         role: user.role,
         email: user.email,
-        token: `Bearer ${token}`,
+        token: token,
         expiresIn: TOKEN_EXPIRATION,
       };
 
@@ -104,8 +107,7 @@ const login = async (userRequest,role,res) => {
       });
     }
   } catch (err) {
-    console.log("bhbhhb",err);
-    
+    // console.log("bhbhhb",err);
     let errorMsg = MSG.loginError;
     if (err.isJoi === true) {
       err.status = 403;

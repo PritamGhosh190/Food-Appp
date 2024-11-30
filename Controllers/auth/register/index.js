@@ -32,12 +32,12 @@ const MSG = {
  */
 const register = async (userRequest, role, res) => {
   try {
-    console.log("dxc",userRequest);
+    // console.log("dxc",userRequest);
     
     const signupRequest = await signupSchema.validateAsync(userRequest);
     // Validate the mobileNumberNotTaken
     let mobileNumberNotTaken = await validateUser(signupRequest.mobileNumber);
-    console.log("hvhch",mobileNumberNotTaken);
+    // console.log("hvhch",mobileNumberNotTaken);
     if (!mobileNumberNotTaken) {
       return res.status(203).json({
         message: MSG.usernameExists,
@@ -62,7 +62,7 @@ const register = async (userRequest, role, res) => {
       password,
       role,
     });
-    console.log("hvhch",newUser);
+    // console.log("hvhch",newUser);
     
 
     await newUser.save();
@@ -71,7 +71,7 @@ const register = async (userRequest, role, res) => {
       success: true,
     });
   } catch (err) {
-    console.log("nbchdch",err);
+    // console.log("nbchdch",err);
     
     let errorMsg = MSG.signupError;
     if (err.isJoi === true) {

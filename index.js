@@ -9,7 +9,7 @@ const path = require('path');
 const axios = require('axios');
 const multer = require('multer');
 
-const apiUrl = 'http://web.sensegeofence.com:3006/api';
+// const apiUrl = 'http://web.sensegeofence.com:3006/api';
 const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
 const PORT = NODE_PORT || 5000;
 

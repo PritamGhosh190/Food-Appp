@@ -30,36 +30,36 @@ const fileFilter = (req, file, cb) => {
 
 // Initialize multer with the defined storage and file filter
 const upload = multer({ storage: storage });
-router.post("/fileUpload", async (req, res) => {
-    console.log("byggy",req.file);
+// router.post("/fileUpload", async (req, res) => {
+//     console.log("byggy",req.file);
     
-    console.log("fileUpload");
-    try {
-        img_upload1(req, res, async (err) => {
-            if (err) {
-                console.error("Error in uploading:", err);
-                return res.status(500).json(err);
-            }
-            if (req.file && req.file.filename !== undefined && req.file !== null) {
-                return res.status(200).json({
-                    code: 0,
-                    status: true,
-                    result: "File uploaded",
-                });
-            } else {
-                client.close();
-                return res.status(201).json({
-                    code: 1,
-                    result: "Please fill the mandatory fields !!",
-                    message: "Mandatory Field Missing !!",
-                });
-            }
-        });
-    } catch (err) {
-        // console.error("Error:", err);
-        return res.status(500).json(err);
-    }
-});
+//     console.log("fileUpload");
+//     try {
+//         img_upload1(req, res, async (err) => {
+//             if (err) {
+//                 console.error("Error in uploading:", err);
+//                 return res.status(500).json(err);
+//             }
+//             if (req.file && req.file.filename !== undefined && req.file !== null) {
+//                 return res.status(200).json({
+//                     code: 0,
+//                     status: true,
+//                     result: "File uploaded",
+//                 });
+//             } else {
+//                 client.close();
+//                 return res.status(201).json({
+//                     code: 1,
+//                     result: "Please fill the mandatory fields !!",
+//                     message: "Mandatory Field Missing !!",
+//                 });
+//             }
+//         });
+//     } catch (err) {
+//         // console.error("Error:", err);
+//         return res.status(500).json(err);
+//     }
+// });
 
 
 

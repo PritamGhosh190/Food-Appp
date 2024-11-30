@@ -7,6 +7,17 @@ const passport = require('passport')
 router.get('/', (req, res) => {
   res.send('Api running...')
 })
+router.use(
+  '/users',
+  // userAuth,
+  // checkRole([ROLE.admin, ROLE.user, ROLE.seller]),
+  require('./users')
+)
+router.use(
+  '/food',require('./food')
+)
+router.use('/restaurant',userAuth,checkRole(["user","admin","seller"]),require('./restaurant')
+)
 
 // Authentication Router Middleware
 router.use('/auth', require('./auth'))
@@ -22,17 +33,6 @@ router.use('/auth', require('./auth'))
 //   require('./patients')
 // )
 
-router.use(
-  '/users',
-  // userAuth,
-  // checkRole([ROLE.admin, ROLE.user, ROLE.seller]),
-  require('./users')
-)
-router.use(
-  '/food',require('./food')
-)
-router.use('/restaurant',require('./restaurant')
-)
 
 // router.use(
 //   '/charts',

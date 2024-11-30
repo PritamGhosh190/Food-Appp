@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 })
 
 router.post('/add', async (req, res) => {
-  console.log("bgcfgcxfgdcxdxg123");
+  // console.log("bgcfgcxfgdcxdxg123");
   await addUser(req, res)
 })
 

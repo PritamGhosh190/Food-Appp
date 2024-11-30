@@ -15,7 +15,7 @@ const addUser = async (req, res) => {
       gender:req.body.gender,
       role:req.body.role,
     }
-    console.log("ccfgcgxgxxg",user)
+    // console.log("ccfgcgxgxxg",user)
 
     await userRegister(user, role, res)
   }catch (err) {
