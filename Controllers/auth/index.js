@@ -27,10 +27,14 @@ const userAuth = async (req, res, next) => {
       host != "localhost:3006" &&
       host != "192.168.12.152:3010" &&
       host !="https://food-appp-keus.onrender.com" &&
+      domain !="https://food-appp-keus.onrender.com" &&
       domainname != "192.168.31.7" 
     ) {
+    console.log( "I am here 1111111111=============================================>>>>>");
+
       return res.sendStatus(401);
     } else {
+    console.log( "I am here 2222222=============================================>>>>>");
       const decoded =  jwt.verify(token, process.env.SECRET);
       const userId= decoded.user_id;
       const role =decoded.role
@@ -40,7 +44,7 @@ const userAuth = async (req, res, next) => {
      
     }
   } catch (error) {
-    console.log(error, "hbhbchdbhx");
+    console.log( "hbhbchdbhx=============================================>>>>>",error);
     res.status(401).json({ code: 1, result: error, message: "Authentication failed" });
   }
 };
