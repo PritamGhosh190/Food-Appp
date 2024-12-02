@@ -49,6 +49,41 @@ const userAuth = async (req, res, next) => {
   }
 };
 
+const userAuth1 = async (req, res, next) => {
+  try {
+    const host = req.headers.host;
+    const domainname = req.hostname;
+    const token = req.headers.authorization.split(" ")[1];
+    console.log("bhxbhb",host,"gcgfcc" ,domainname);
+    console.log("bhxbhb111111111111111111111=======================================================>>>>",req);
+    if (token == null) return res.sendStatus(401);
+    if (
+      domainname != "localhost" &&
+      host != "localhost:3006" &&
+      host != "192.168.12.152:3010" &&
+      host !="https://food-appp-keus.onrender.com" &&
+      domainname !="https://food-appp-keus.onrender.com" &&
+      domainname != "192.168.31.7" 
+    ) {
+    console.log( "I am here 1111111111=============================================>>>>>");
+
+      return res.sendStatus(401);
+    } else {
+    console.log( "I am here 2222222=============================================>>>>>");
+      const decoded =  jwt.verify(token, process.env.SECRET);
+      const userId= decoded.user_id;
+      const role =decoded.role
+      console.log("cfchghfxc",decoded,userId,role);
+      req.user = { userId, role };
+        next();
+    }
+    
+  } catch (error) {
+    console.log( "hbhbchdbhx=============================================>>>>>",error);
+    res.status(401).json({ code: 1, result: error, message: "Authentication failed" });
+  }
+};
+
 
 // const userAuth = passport.authenticate("jwt", { session: false });
 
@@ -83,6 +118,7 @@ const serializeUser = (user) => {
 
 module.exports = {
   userAuth,
+  userAuth1,
   userLogin,
   userRegister,
   checkRole,
