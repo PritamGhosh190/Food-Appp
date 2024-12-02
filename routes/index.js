@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const {userAuth, checkRole, serializeUser} = require('../Controllers/auth')
+const {userAuth, checkRole, serializeUser,userAuth1} = require('../Controllers/auth')
 const {ROLE} = require('../config/roles')
 const passport = require('passport')
 
@@ -17,6 +17,8 @@ router.use(
   '/food',userAuth,require('./food')
 )
 router.use('/restaurant',userAuth,require('./restaurant')
+)
+router.use('/restaurantAuth',userAuth1,require('./restaurant')
 )
 
 // Authentication Router Middleware
