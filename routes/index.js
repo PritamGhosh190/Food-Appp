@@ -14,9 +14,9 @@ router.use(
   require('./users')
 )
 router.use(
-  '/food',require('./food')
+  '/food',userAuth,require('./food')
 )
-router.use('/restaurant',userAuth,checkRole(["user","admin","seller"]),require('./restaurant')
+router.use('/restaurant',userAuth,require('./restaurant')
 )
 
 // Authentication Router Middleware
