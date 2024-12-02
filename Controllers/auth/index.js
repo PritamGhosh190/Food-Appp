@@ -27,7 +27,7 @@ const userAuth = async (req, res, next) => {
       host != "localhost:3006" &&
       host != "192.168.12.152:3010" &&
       host !="https://food-appp-keus.onrender.com" &&
-      domain !="https://food-appp-keus.onrender.com" &&
+      domainname !="https://food-appp-keus.onrender.com" &&
       domainname != "192.168.31.7" 
     ) {
     console.log( "I am here 1111111111=============================================>>>>>");
