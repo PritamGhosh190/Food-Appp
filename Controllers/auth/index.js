@@ -22,18 +22,18 @@ const userAuth = async (req, res, next) => {
     const token = req.headers.authorization.split(" ")[1];
     console.log("bhxbhb",token,"gcgfcc",req.headers.authorization,host ,domainname);
     if (token == null) return res.sendStatus(401);
-    if (
-      domainname != "localhost" &&
-      host != "localhost:3006" &&
-      host != "192.168.12.152:3010" &&
-      host !="https://food-appp-keus.onrender.com" &&
-      domainname !="https://food-appp-keus.onrender.com" &&
-      domainname != "192.168.31.7" 
-    ) {
-    console.log( "I am here 1111111111=============================================>>>>>");
+    // if (
+    //   domainname != "localhost" &&
+    //   host != "localhost:3006" &&
+    //   host != "192.168.12.152:3010" &&
+    //   host !="https://food-appp-keus.onrender.com" &&
+    //   domainname !="https://food-appp-keus.onrender.com" &&
+    //   domainname != "192.168.31.7" 
+    // ) {
+    // console.log( "I am here 1111111111=============================================>>>>>");
 
-      return res.sendStatus(401);
-    } else {
+    //   return res.sendStatus(401);
+    // } else {
     console.log( "I am here 2222222=============================================>>>>>");
       const decoded =  jwt.verify(token, process.env.SECRET);
       const userId= decoded.user_id;
@@ -42,7 +42,7 @@ const userAuth = async (req, res, next) => {
       req.user = { userId, role };
         next();
      
-    }
+    
   } catch (error) {
     console.log( "hbhbchdbhx=============================================>>>>>",error);
     res.status(401).json({ code: 1, result: error, message: "Authentication failed" });
