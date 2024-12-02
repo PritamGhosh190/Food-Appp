@@ -26,6 +26,7 @@ const userAuth = async (req, res, next) => {
       domainname != "localhost" &&
       host != "localhost:3006" &&
       host != "192.168.12.152:3010" &&
+      host !="https://food-appp-keus.onrender.com" &&
       domainname != "192.168.31.7" 
     ) {
       return res.sendStatus(401);

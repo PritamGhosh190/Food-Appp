@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
+// const {userAuth, checkRole, serializeUser} = require('../Controllers/auth')
+
+
 const restaurantController = require("../../Controllers/restaurant");
 const { log } = require('console');
 
@@ -64,7 +68,7 @@ const upload = multer({ storage: storage });
 
 
 // Route to create a new restaurant (with image upload)
-router.post('/add', upload.single('Restaurant_image'), restaurantController.createrestaurant);
+router.post('/add',checkRole(["user","admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
 
 // Route to update an existing restaurant (with image upload)
 // router.put('/:id', upload.single('image'), restaurantController.updaterestaurant);

@@ -3,6 +3,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { createFood, getAllFoods, getFoodById, updateFood, deleteFood } = require("../../Controllers/food");
+const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Create a new food entry
-router.post('/add', upload.single('image'), createFood);
+router.post('/add',checkRole(["user","admin","seller"]), upload.single('image'), createFood);
 
 // Get all food details
 router.get('/foods', getAllFoods);
