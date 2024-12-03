@@ -2,7 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { createFood, getAllFoods, getFoodById, updateFood, deleteFood } = require("../../Controllers/food");
+const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood } = require("../../Controllers/food");
 const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
 
 const router = express.Router();
@@ -32,5 +32,9 @@ router.put('/foods/:id', updateFood);
 
 // Delete food by ID
 router.delete('/foods/:id', deleteFood);
+
+//Filter foods
+router.post('/filter', filterFood);
+
 
 module.exports = router;
