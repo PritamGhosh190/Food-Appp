@@ -10,7 +10,7 @@ exports.createFood = async (req, res) => {
     const { name, restaurant, distance, price, rating, category, type,cuisineType } = req.body;
     const image = req.file.path; // Get image path from multer
 
-    
+
     const newFood = new Food({
       name,
       image,
@@ -153,6 +153,8 @@ exports.filterFood= async (req, res) => {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
     }
+
+    // Testing
 
     // Query the Food collection with the filter
     const foods = await Food.find(filter).populate('restaurant'); // Populate restaurant details if needed
