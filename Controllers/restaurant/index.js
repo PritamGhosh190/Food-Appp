@@ -1,4 +1,4 @@
-const restaurant = require("../../models/Restaurant ");
+const restaurant = require("../../models/Restaurant");
 require('dotenv').config();  // Assuming the model is named 'Food.js'
 
 // Assuming the 'uploads' folder is publicly accessible via URL
