@@ -77,7 +77,7 @@ exports.getAllFoods = async (req, res) => {
     const resultFood=foods.map(food => {
       // const updatedPath = filePath.replace(/\\+/g, '/'); 
       food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
-      return restaurant;
+      return foods;
     });
 
     if (foods.length === 0) {
@@ -159,6 +159,20 @@ exports.filterFood= async (req, res) => {
     // Query the Food collection with the filter
     const foods = await Food.find(filter).populate('restaurant'); // Populate restaurant details if needed
 
+    const resultFood=foods.map(food => {
+      // const updatedPath = filePath.replace(/\\+/g, '/'); 
+      food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+      // console.log("bhhgvghvfcfxf==============>>>>>",food.restaurant.image);
+      
+      if (!food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+        // Prepend the base URL to the restaurant image only if it's missing
+        food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
+      } else {
+        // If it already has the base URL, just fix the slashes
+        food.restaurant.image = food.restaurant.image.replace(/\\+/g, '/');
+      }//to the image path
+      return foods;
+    });
     res.json({ foods });
   } catch (error) {
     console.error(error);
