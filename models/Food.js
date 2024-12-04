@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
+const Restaurant = require("./Restaurant");
+
 
 // Define the food schema
 const foodSchema = new mongoose.Schema({
   name: { type: String, required: true },
   restaurant: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Restaurant', // Reference to the Restaurant model
+    ref: Restaurant, // Reference to the Restaurant model
     required: true 
   },
   image: { type: String, required: true }, // URL of the image (you can use multer for file upload)
