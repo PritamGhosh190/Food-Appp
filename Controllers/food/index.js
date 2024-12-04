@@ -285,12 +285,12 @@ exports.getCart = async (req, res) => {
       } else {
         cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
       }
-      return cartDetils;
+      // return cartDetils;
     });
 
-    // console.log("ngbjyvjctgcht",resultFood);
+    console.log("ngbjyvjctgcht",cartDetils);
 
-    return res.status(200).json({ message: "Fetched cart Details", result: resultFood });
+    return res.status(200).json({ message: "Fetched cart Details", result: cartDetils });
   }
   catch (error) {
     console.error(error);
