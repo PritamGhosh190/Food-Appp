@@ -1,6 +1,7 @@
 // controllers/foodController.js
 const Food = require('../../models/Food');
 const Restaurant = require("../../models/Restaurant")
+const Cart = require("../../models/Cart")
 require('dotenv').config(); 
 // Create a new food detail
 exports.createFood = async (req, res) => {
@@ -179,3 +180,83 @@ exports.filterFood= async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+
+exports.addCart= async (req, res) => {
+  // Validate the request body
+  // const { error } = cartValidationSchema.validate(req.body);
+  // if (error) {
+  //   return res.status(400).send(error.details[0].message);
+  // }
+  try {
+
+  const {food, quantity } = req.body;
+  const user = req.user.userId;
+
+  // Check if the item already exists in the user's cart
+  const existingCartItem = await Cart.findOne({ user, food });
+
+  if (existingCartItem) {
+    // If the item exists, update the quantity
+    existingCartItem.quantity += quantity; // Add new quantity to the existing one
+    await existingCartItem.save();
+    return res.status(200).send('Item updated in cart');
+  } else {
+    // If it doesn't exist, create a new cart item
+    const newCartItem = new Cart({
+      user,
+      food,
+      quantity,
+    });
+
+    await newCartItem.save();
+    res.status(201).send('Item added to cart');
+  }
+}
+catch(error){
+  console.error(error);
+    res.status(500).json({ message: 'Server error' });
+}
+};
+
+// Delete Item from Cart (DELETE /cart/:id)
+// app.delete('/cart/:id', async (req, res) => {
+//   const cartItemId = req.params.id;
+
+//   // Find the cart item by ID and delete it
+//   const cartItem = await Cart.findByIdAndDelete(cartItemId);
+
+//   if (!cartItem) {
+//     return res.status(404).send('Cart item not found');
+//   }
+
+//   res.status(200).send('Item removed from cart');
+// });
+
+// // Edit Cart Item (PUT /cart/:id)
+// app.put('/cart/:id', async (req, res) => {
+//   const cartItemId = req.params.id;
+
+//   // Validate the request body for quantity
+//   const { error } = Joi.object({
+//     quantity: Joi.number().min(1).required(),
+//   }).validate(req.body);
+
+//   if (error) {
+//     return res.status(400).send(error.details[0].message);
+//   }
+
+//   const { quantity } = req.body;
+
+//   // Find and update the cart item by ID
+//   const cartItem = await Cart.findById(cartItemId);
+
+//   if (!cartItem) {
+//     return res.status(404).send('Cart item not found');
+//   }
+
+//   cartItem.quantity = quantity;
+//   await cartItem.save();
+
+//   res.status(200).send('Cart item updated');
+// });
