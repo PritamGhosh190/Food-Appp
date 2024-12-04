@@ -2,13 +2,14 @@
 const Food = require('../../models/Food');
 const Restaurant = require("../../models/Restaurant")
 const Cart = require("../../models/Cart")
-require('dotenv').config(); 
+const User = require("../../models/User")
+require('dotenv').config();
 // Create a new food detail
 exports.createFood = async (req, res) => {
   try {
     // console.log("hiiiii",req.body);
-    
-    const { name, restaurant, distance, price, rating, category, type,cuisineType } = req.body;
+
+    const { name, restaurant, distance, price, rating, category, type, cuisineType } = req.body;
     const image = req.file.path; // Get image path from multer
 
 
@@ -28,7 +29,7 @@ exports.createFood = async (req, res) => {
     res.status(201).json({ message: 'Food detail created successfully', food: newFood });
   } catch (error) {
     // console.log("errror",error);
-    
+
     res.status(400).json({ message: 'Error creating food detail', error: error.message });
   }
 };
@@ -37,7 +38,7 @@ exports.createFood = async (req, res) => {
 exports.getAllFoods = async (req, res) => {
   try {
     // Get query parameters
-    const { name, restaurant, cuisineType, category,type } = req.query;
+    const { name, restaurant, cuisineType, category, type } = req.query;
 
     // Build the filter object
     let filter = {};
@@ -75,7 +76,7 @@ exports.getAllFoods = async (req, res) => {
         }
       }
     ]);
-    const resultFood=foods.map(food => {
+    const resultFood = foods.map(food => {
       // const updatedPath = filePath.replace(/\\+/g, '/'); 
       food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
       return foods;
@@ -133,7 +134,7 @@ exports.deleteFood = async (req, res) => {
 
 //Filter by parameter
 
-exports.filterFood= async (req, res) => {
+exports.filterFood = async (req, res) => {
   try {
     // Get the filter values from the body of the request
     const { name, type, cuisineType, restaurantName } = req.body;
@@ -160,11 +161,11 @@ exports.filterFood= async (req, res) => {
     // Query the Food collection with the filter
     const foods = await Food.find(filter).populate('restaurant'); // Populate restaurant details if needed
 
-    const resultFood=foods.map(food => {
+    const resultFood = foods.map(food => {
       // const updatedPath = filePath.replace(/\\+/g, '/'); 
       food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
       // console.log("bhhgvghvfcfxf==============>>>>>",food.restaurant.image);
-      
+
       if (!food.restaurant.image.startsWith(process.env.IMAGEURL)) {
         // Prepend the base URL to the restaurant image only if it's missing
         food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
@@ -182,7 +183,7 @@ exports.filterFood= async (req, res) => {
 }
 
 
-exports.addCart= async (req, res) => {
+exports.addCart = async (req, res) => {
   // Validate the request body
   // const { error } = cartValidationSchema.validate(req.body);
   // if (error) {
@@ -190,35 +191,112 @@ exports.addCart= async (req, res) => {
   // }
   try {
 
-  const {food, quantity } = req.body;
-  const user = req.user.userId;
+    const { food, quantity } = req.body;
+    const user = req.user.userId;
 
-  // Check if the item already exists in the user's cart
-  const existingCartItem = await Cart.findOne({ user, food });
+    // Check if the item already exists in the user's cart
+    const existingCartItem = await Cart.findOne({ user, food });
 
-  if (existingCartItem) {
-    // If the item exists, update the quantity
-    existingCartItem.quantity += quantity; // Add new quantity to the existing one
-    await existingCartItem.save();
-    return res.status(200).send('Item updated in cart');
-  } else {
-    // If it doesn't exist, create a new cart item
-    const newCartItem = new Cart({
-      user,
-      food,
-      quantity,
-    });
+    if (existingCartItem) {
+      // If the item exists, update the quantity
+      existingCartItem.quantity += quantity; // Add new quantity to the existing one
+      await existingCartItem.save();
+      const cartDetils = await Cart.find({ user })
+        .populate('user')
+        .populate({
+          path: 'food',
+          model: Food,
+          populate: {
+            path: 'restaurant',
+            model: Restaurant
+          }
+        });
 
-    await newCartItem.save();
-    res.status(201).send('Item added to cart');
+      const resultFood = cartDetils.map(cart => {
+        cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+        if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+          cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+        } else {
+          cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+        }
+        return cartDetils;
+      });
+
+      // console.log("ngbjyvjctgcht",resultFood);
+
+      return res.status(200).json({ message: "Item updated in cart", result: resultFood });
+    } else {
+      // If it doesn't exist, create a new cart item
+      const newCartItem = new Cart({
+        user,
+        food,
+        quantity,
+      });
+
+      await newCartItem.save();
+      const cartDetils = await Cart.find({ user })
+        .populate('user')
+        .populate({
+          path: 'food',
+          model: Food,
+          populate: {
+            path: 'restaurant',
+            model: Restaurant
+          }
+        });
+
+      const resultCart = cartDetils.map(cart => {
+        cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+        if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+          cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+        } else {
+          cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+        }
+        return cartDetils;
+      });
+      res.status(201).json({ message: "Added to the Cart", result: resultCart });
+    }
   }
-}
-catch(error){
-  console.error(error);
+  catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error' });
-}
+  }
 };
 
+
+exports.getCart = async (req, res) => {
+
+  try {
+    const cartDetils = await Cart.find({ user:req.user.userId })
+      .populate('user')
+      .populate({
+        path: 'food',
+        model: Food,
+        populate: {
+          path: 'restaurant',
+          model: Restaurant
+        }
+      });
+
+    const resultFood = cartDetils.map(cart => {
+      cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+      if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+        cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+      } else {
+        cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+      }
+      return cartDetils;
+    });
+
+    // console.log("ngbjyvjctgcht",resultFood);
+
+    return res.status(200).json({ message: "Fetched cart Details", result: resultFood });
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 // Delete Item from Cart (DELETE /cart/:id)
 // app.delete('/cart/:id', async (req, res) => {
 //   const cartItemId = req.params.id;
