@@ -56,13 +56,13 @@ const login = async (userRequest,role,res) => {
 
     // console.log("users",user);
     // We will check the role
-    if (user.role !== role) {
-      return res.status(403).json({
-        reason: "role",
-        message: MSG.wrongRole,
-        success: false,
-      });
-    }
+    // if (user.role !== role) {
+    //   return res.status(403).json({
+    //     reason: "role",
+    //     message: MSG.wrongRole,
+    //     success: false,
+    //   });
+    // }
 
     
     

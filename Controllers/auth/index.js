@@ -110,6 +110,8 @@ const serializeUser = (user) => {
     Dob:user.Dob,
     role:user.role,
     address:user.address,
+    lat:user.lat,
+    lng:user.lng,
     updatedAt: user.updatedAt,
     createdAt: user.createdAt,
   };

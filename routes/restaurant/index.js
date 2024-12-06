@@ -68,7 +68,7 @@ const upload = multer({ storage: storage });
 
 
 // Route to create a new restaurant (with image upload)
-router.post('/add',checkRole(["user","admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
+router.post('/add',checkRole(["admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
 
 // Route to update an existing restaurant (with image upload)
 // router.put('/:id', upload.single('image'), restaurantController.updaterestaurant);

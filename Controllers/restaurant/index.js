@@ -1,5 +1,7 @@
 const restaurant = require("../../models/Restaurant");
 require('dotenv').config();  // Assuming the model is named 'Food.js'
+const axios = require('axios');
+
 
 // Assuming the 'uploads' folder is publicly accessible via URL
 
@@ -11,7 +13,23 @@ exports.createrestaurant = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
-
+    if(req.body.address)
+      {
+        const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
+        const resp =await axios.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
+        console.log("url======================result==========================",resp.data.results);
+      if(resp.data.results.length>=1){
+        req.body.lat=resp.data.results[resp.data.results.length-1].geometry.lat;
+        req.body.lng=resp.data.results[resp.data.results.length-1].geometry.lng;
+        // console.log("abc==============================================================================================",req.body.lat,"uhhhbscjgbcgv",req.body.lng);
+      }
+      else{
+        return res.status(402).json({
+          message: 'Inappropiate address try to enter proper address',
+          status:false
+        })
+      }
+      }
     // Create new restaurant object, including the image URL (relative to public path)
     const newrestaurant = new restaurant({
       name: req.body.name,
@@ -22,13 +40,15 @@ exports.createrestaurant = async (req, res) => {
       type: req.body.type,
       cuisineType: req.body.cuisineType,
       location: req.body.location,
+      lat:req.body.lat,
+      lng:req.body.lng,
     });
 
     // Save the new restaurant to the database
     const savedrestaurant = await newrestaurant.save();
     res.status(201).json(savedrestaurant);
   } catch (err) {
-    // console.log("error",err);
+    console.log("error",err);
     
     res.status(500).json({ message: 'Error creating restaurant', error: err });
   }

@@ -9,8 +9,9 @@ const path = require('path');
 const axios = require('axios');
 const multer = require('multer');
 
-// const apiUrl = 'http://web.sensegeofence.com:3006/api';
+const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
 const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
+const { log } = require("console");
 const PORT = NODE_PORT || 5000;
 
 const app = exp();
@@ -81,7 +82,22 @@ const startApp = async () => {
 startApp();
 
 
+// const startApp1 = async () => {
+//   try {
+   
+//    const resp =await axios.get(apiUrl);
+//    console.log("thes resutl--------------------->>>>",resp);
+   
+//   } catch (err) {
+//     console.log("error",err);
+//     error({
+//       message: `Unable to connect with Database \n${err}`,
+//       badge: true,
+//     });
+//   }
+// };
 
+// startApp1();
 
 // axios.get(apiUrl)
 //   .then(response => {
