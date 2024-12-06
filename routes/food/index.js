@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Create a new food entry
-router.post('/add',checkRole(["user","admin","seller"]), upload.single('image'), createFood);
+router.post('/add',checkRole(["admin","seller"]), upload.single('image'), createFood);
 
 // Get all food details
 router.get('/foods', getAllFoods);

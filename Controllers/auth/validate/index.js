@@ -34,6 +34,8 @@ const signupSchema = Joi.object({
   mobileNumber: Joi.string().min(10).required(),
   email: Joi.string().email().required(),
   address: Joi.string().required(),
+  lat: Joi.number().required(),
+  lng: Joi.number().required(),
   Dob: Joi.date().iso(),
   password: Joi.string()
   .min(8)
@@ -54,7 +56,7 @@ const loginSchema = Joi.object({
   password: Joi.string()
   .min(8)
   .required(),
-  role: Joi.string().valid('admin', 'user', 'guest').required()
+  role: Joi.string().valid('admin', 'user', 'seller').required()
 })
 
 module.exports = {

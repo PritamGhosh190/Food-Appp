@@ -1,5 +1,5 @@
-const {Schema, model, models} = require('mongoose')
-const {ROLE} = require('../config/roles')
+const { Schema, model, models } = require('mongoose')
+const { ROLE } = require('../config/roles')
 
 const UserSchema = new Schema(
   {
@@ -19,7 +19,7 @@ const UserSchema = new Schema(
       type: String,
       default: 'user',
       enum: [ROLE.seller, ROLE.admin, ROLE.user],
-    }, 
+    },
     gender: {
       type: String,
     },
@@ -30,12 +30,18 @@ const UserSchema = new Schema(
     mobileNumber: {
       type: String,
     },
-   Dob:
-   {
-    type:Date,
-   }
+    Dob:
+    {
+      type: Date,
+    },
+    lat: {
+      type: Number,
+    },
+    lng: {
+      type: Number,
+    },
   },
-  {timestamps: true}
+  { timestamps: true }
 )
 
 const User = models.users ? models.users : model('users', UserSchema)
