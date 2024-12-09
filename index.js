@@ -6,10 +6,12 @@ const morgan = require("morgan");
 const { connect } = require("mongoose");
 const { success, error } = require("consola");
 const path = require('path');
-const axios = require('axios');
+// const axios = require('axios');
 const multer = require('multer');
+const superagent = require('superagent');
+require('dotenv').config();
 
-const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
+// const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
 const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
 const { log } = require("console");
 const PORT = NODE_PORT || 5000;
@@ -75,47 +77,46 @@ const startApp = async () => {
       badge: true,
     });
     startApp();
-  }
+  }};
+
+  const startApp1 = async () => {
+    const address = "kolkata"; // Example address
+    try {
+        // Construct the URL for geolocation API
+        const url = `${process.env.GEOLOCATIONURL}${address}${process.env.APIKEY}`;
+        console.log("Constructed URL:", url);
+        
+        // Send the GET request using superagent
+        const response = await superagent.get(url);
+
+        // Check if the response is successful (status code 200)
+        if (response.status !== 200) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Assuming the API response is in JSON format
+        const resp = response.body; // superagent automatically parses the JSON response
+
+        // Log some part of the response for debugging
+        console.log("Response data:", resp);
+
+        // Check if there are results in the response
+        if (resp.results && resp.results.length >= 1) {
+            const lat = resp.results[resp.results.length - 1].geometry.lat;
+            const lng = resp.results[resp.results.length - 1].geometry.lng;
+            console.log("Latitude:", lat, "Longitude:", lng);
+        } else {
+            console.log("No results found.");
+        }
+    } catch (err) {
+        // Handle errors (network issues, invalid response, etc.)
+        console.error("Error occurred:", err);
+    }
 };
 
-
 startApp();
+startApp1();
 
 
 
 
-// const startApp1 = async () => {
-//   try {
-   
-//    const resp =await axios.get(apiUrl);
-//    console.log("thes resutl--------------------->>>>",resp);
-   
-//   } catch (err) {
-//     console.log("error",err);
-//     error({
-//       message: `Unable to connect with Database \n${err}`,
-//       badge: true,
-//     });
-//   }
-// };
-
-// startApp1();
-
-// axios.get(apiUrl)
-//   .then(response => {
-//     console.log('Response data:', response.data);  // Handle the response data
-//   })
-//   .catch(error => {
-//     if (error.response) {
-//       // If the request was made and the server responded with a status code
-//       // that falls out of the range of 2xx
-//       console.error('Response error:', error.response.status);
-//       console.error('Response data:', error.response.data);
-//     } else if (error.request) {
-//       // If the request was made but no response was received
-//       console.error('Request error:', error.request);
-//     } else {
-//       // Any other error
-//       console.error('Error message:', error.message);
-//     }
-//   });

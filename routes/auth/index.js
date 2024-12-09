@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const {ROLE} = require('../../config/roles')
+// const {ROLE} = require('../../config/roles')
 // Bring in the User Registration function
 const {
   userAuth,
@@ -52,7 +52,7 @@ router.post('/login', async (req, res) => {
 router.post(
   '/add-auth-button',
   userAuth,
-  checkRole([ROLE.admin]),
+  checkRole(["admin"]),
   async (req, res) => {
     await addAuthButton(req, res)
   }
@@ -65,7 +65,7 @@ router.get('/get-auth-buttons', userAuth, async (req, res) => {
 router.post(
   '/update-auth-button/:authButtonId',
   userAuth,
-  checkRole([ROLE.admin]),
+  checkRole(["admin"]),
   async (req, res) => {
     await updateAuthButton(req, res)
   }
@@ -74,7 +74,7 @@ router.post(
 router.delete(
   '/delete-auth-button/:authButtonId',
   userAuth,
-  checkRole([ROLE.admin]),
+  checkRole(["admin"]),
   async (req, res) => {
     await removeAuthButton(req, res)
   }
@@ -84,8 +84,8 @@ router.delete(
 router.get(
   '/admin-protected',
   userAuth,
-  checkRole([ROLE.admin]),
-  async (req, res) => {
+  checkRole(["admin"]),
+ async (req, res) => {
     return res.json('Hello Super Admin')
   }
 )
@@ -94,7 +94,7 @@ router.get(
 router.get(
   '/operator-protected',
   userAuth,
-  checkRole([ROLE.operator]),
+  checkRole(["admin"]),
   async (req, res) => {
     return res.json('Hello Admin')
   }
@@ -104,7 +104,7 @@ router.get(
 router.get(
   '/analytics-protected',
   userAuth,
-  checkRole([ROLE.analytics]),
+  checkRole(["admin"]),
   async (req, res) => {
     return res.json('Hello User')
   }

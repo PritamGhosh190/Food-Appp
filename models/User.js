@@ -1,5 +1,4 @@
 const { Schema, model, models } = require('mongoose')
-const { ROLE } = require('../config/roles')
 
 const UserSchema = new Schema(
   {
@@ -18,7 +17,7 @@ const UserSchema = new Schema(
     role: {
       type: String,
       default: 'user',
-      enum: [ROLE.seller, ROLE.admin, ROLE.user],
+      enum: ["seller", "admin", "user"],
     },
     gender: {
       type: String,

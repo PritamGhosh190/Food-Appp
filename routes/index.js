@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const {userAuth, checkRole, serializeUser,userAuth1} = require('../Controllers/auth')
-const {ROLE} = require('../config/roles')
+// const {ROLE} = require('../config/roles')
 const passport = require('passport')
 
 
@@ -46,6 +46,6 @@ router.use('/auth', require('./auth'))
 // // Admin & Operator Protected Route
 // router.use('/menu', require('./menu'))
 
-router.use('/roles', userAuth, checkRole([ROLE.admin]), require('./roles'))
+// router.use('/roles', userAuth, checkRole(["admin"]), require('./roles'))
 
 module.exports = router
