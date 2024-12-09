@@ -327,6 +327,7 @@ try{
   // Validate the request body for quantity
   const { error } = Joi.object({
     quantity: Joi.number().min(1).required(),
+    id:Joi.string().required()
   }).validate(req.body);
 
   if (error) {
