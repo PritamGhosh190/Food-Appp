@@ -1,6 +1,7 @@
 const restaurant = require("../../models/Restaurant");
 require('dotenv').config();  // Assuming the model is named 'Food.js'
-// const axios = require('axios');
+const superagent = require('superagent');
+
 
 
 // Assuming the 'uploads' folder is publicly accessible via URL
@@ -13,22 +14,23 @@ exports.createrestaurant = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
-    // if(req.body.address)
-    //   {
-    //     const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
-    //     const resp =await axios.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
-    //     console.log("url======================result==========================",resp.data.results);
-    //   if(resp.data.results.length>=1){
-    //     req.body.lat=resp.data.results[resp.data.results.length-1].geometry.lat;
-    //     req.body.lng=resp.data.results[resp.data.results.length-1].geometry.lng;
-    //     // console.log("abc==============================================================================================",req.body.lat,"uhhhbscjgbcgv",req.body.lng);
-    //   }
-    //   else{
-    //     return res.status(402).json({
-    //       message: 'Inappropiate address try to enter proper address',
-    //       status:false
-    //     })
-    //   }
+    if(req.body.address)
+      {
+        const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
+        const response =await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
+        // console.log("url======================result==========================",response);
+        const resp = response.body;
+        if (resp.results && resp.results.length >= 1) {
+          req.body.lat = resp.results[resp.results.length - 1].geometry.lat;
+          req.body.lng = resp.results[resp.results.length - 1].geometry.lng;
+          console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
+      } else {
+        return res.status(402).json({
+          message: 'Inappropiate address try to enter proper address',
+          status:false
+        })
+      }
+    }
     //   }
     // Create new restaurant object, including the image URL (relative to public path)
     const newrestaurant = new restaurant({
