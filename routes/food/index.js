@@ -2,7 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart } = require("../../Controllers/food");
+const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart } = require("../../Controllers/food");
 const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
 
 const router = express.Router();
@@ -39,6 +39,8 @@ router.post('/filter', filterFood);
 router.post('/cart/add', addCart);
 
 router.get('/cart/get', getCart);
+router.post('/cart/remove', removeCart);
+router.post('/cart/delete', deleteCart);
 
 
 module.exports = router;

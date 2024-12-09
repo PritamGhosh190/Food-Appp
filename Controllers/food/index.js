@@ -298,43 +298,56 @@ exports.getCart = async (req, res) => {
   }
 };
 // Delete Item from Cart (DELETE /cart/:id)
-// app.delete('/cart/:id', async (req, res) => {
-//   const cartItemId = req.params.id;
+exports.deleteCart =async (req, res) => {
+  const cartItemId = req.body.id;
 
-//   // Find the cart item by ID and delete it
-//   const cartItem = await Cart.findByIdAndDelete(cartItemId);
+  try{
 
-//   if (!cartItem) {
-//     return res.status(404).send('Cart item not found');
-//   }
+  // Find the cart item by ID and delete it
+  const cartItem = await Cart.findByIdAndDelete(cartItemId);
 
-//   res.status(200).send('Item removed from cart');
-// });
+  if (!cartItem) {
+    return res.status(404).send('Cart item not found');
+  }
+
+    res.status(200).json({ message: 'cart Item  deleted successfully' });
+}
+catch(err){
+  console.error(err);
+  res.status(500).json({ message: 'Server error' });
+}
+};
 
 // // Edit Cart Item (PUT /cart/:id)
-// app.put('/cart/:id', async (req, res) => {
-//   const cartItemId = req.params.id;
+exports.removeCart = async (req, res) => {
+  const cartItemId = req.body.id;
+try{
+  // Validate the request body for quantity
+  const { error } = Joi.object({
+    quantity: Joi.number().min(1).required(),
+  }).validate(req.body);
 
-//   // Validate the request body for quantity
-//   const { error } = Joi.object({
-//     quantity: Joi.number().min(1).required(),
-//   }).validate(req.body);
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
 
-//   if (error) {
-//     return res.status(400).send(error.details[0].message);
-//   }
+  const { quantity } = req.body;
 
-//   const { quantity } = req.body;
+  // Find and update the cart item by ID
+  const cartItem = await Cart.findById(cartItemId);
 
-//   // Find and update the cart item by ID
-//   const cartItem = await Cart.findById(cartItemId);
+  if (!cartItem) {
+    return res.status(404).send('Cart item not found');
+  }
 
-//   if (!cartItem) {
-//     return res.status(404).send('Cart item not found');
-//   }
+  cartItem.quantity = quantity;
+  await cartItem.save();
 
-//   cartItem.quantity = quantity;
-//   await cartItem.save();
+  res.status(200).json({ message: 'cart Item  deleted successfully' });
 
-//   res.status(200).send('Cart item updated');
-// });
+}
+catch(err){
+  console.error(err);
+  res.status(500).json({ message: 'Server error' });
+}
+};
