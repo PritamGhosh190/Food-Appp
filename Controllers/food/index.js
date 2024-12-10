@@ -5,6 +5,7 @@ const Cart = require("../../models/Cart")
 const User = require("../../models/User")
 require('dotenv').config();
 const Joi = require('joi')
+console.log("imageurl=======>>>",process.env.IMAGEURL);
 
 // Create a new food detail
 exports.createFood = async (req, res) => {
@@ -353,4 +354,46 @@ catch(err){
   console.error(err);
   res.status(500).json({ message: 'Server error' });
 }
+};
+
+
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+};
+
+// Function to fetch user and restaurant and calculate distance
+exports.calculateDistance = async () => {
+  try {
+      // Fetch the user and restaurant data from database by their _id
+      const user = await User.findById('6752a0ecbeddc2e748509200');  // Example user _id
+      const restaurant = await Restaurant.findById('6752a1f8beddc2e748509204');  // Example restaurant _id
+      
+      if (!user || !restaurant) {
+          throw new Error('User or Restaurant not found');
+      }
+
+      // Extracting lat and lng from the user and restaurant data
+      const userLat = user.lat;
+      const userLng = user.lng;
+      const restaurantLat = restaurant.lat;
+      const restaurantLng = restaurant.lng;
+console.log("bhbcjhb bhbjb======================>>>",userLat, userLng, restaurantLat, restaurantLng);
+
+
+      // Calculate distance between user and restaurant using Haversine formula
+      const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng);
+
+      console.log(`The distance between the user and the restaurant is: ${distance.toFixed(2)} kilometers.`);
+  } catch (error) {
+      console.error("Error occurred:", error);
+  }
 };
