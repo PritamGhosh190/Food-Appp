@@ -82,7 +82,6 @@ const startApp = async () => {
   const startApp1 = async () => {
     const address = "kolkata"; // Example address
     const arrayOfObjects = [
-      { id: 1, name: "John", age: 30 },
       { id: 2, name: "Jane", age: 25 },
       { id: 3, name: "Sam", age: 35 },
       { id: 4, name: "Anna", age: 28 }
@@ -126,6 +125,7 @@ const startApp = async () => {
 };
 
 startApp();
+
 // startApp1();
 
 
