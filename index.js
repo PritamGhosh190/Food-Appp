@@ -81,37 +81,48 @@ const startApp = async () => {
 
   const startApp1 = async () => {
     const address = "kolkata"; // Example address
-    try {
-        // Construct the URL for geolocation API
-        const url = `${process.env.GEOLOCATIONURL}${address}${process.env.APIKEY}`;
-        console.log("Constructed URL:", url);
+    const arrayOfObjects = [
+      { id: 1, name: "John", age: 30 },
+      { id: 2, name: "Jane", age: 25 },
+      { id: 3, name: "Sam", age: 35 },
+      { id: 4, name: "Anna", age: 28 }
+    ];
+    const rest=arrayOfObjects.map((e)=>{
+      return e.age*3
+    })
+    console.log("bghfcgfcfgcdg",rest);
+    
+    // try {
+    //     // Construct the URL for geolocation API
+    //     const url = `${process.env.GEOLOCATIONURL}${address}${process.env.APIKEY}`;
+    //     console.log("Constructed URL:", url);
         
-        // Send the GET request using superagent
-        const response = await superagent.get(url);
+    //     // Send the GET request using superagent
+    //     const response = await superagent.get(url);
 
-        // Check if the response is successful (status code 200)
-        if (response.status !== 200) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    //     // Check if the response is successful (status code 200)
+    //     if (response.status !== 200) {
+    //         throw new Error(`HTTP error! status: ${response.status}`);
+    //     }
 
-        // Assuming the API response is in JSON format
-        const resp = response.body; // superagent automatically parses the JSON response
+    //     // Assuming the API response is in JSON format
+    //     const resp = response.body; // superagent automatically parses the JSON response
 
-        // Log some part of the response for debugging
-        console.log("Response data:", resp);
+    //     // Log some part of the response for debugging
+    //     console.log("Response data:", resp);
 
-        // Check if there are results in the response
-        if (resp.results && resp.results.length >= 1) {
-            const lat = resp.results[resp.results.length - 1].geometry.lat;
-            const lng = resp.results[resp.results.length - 1].geometry.lng;
-            console.log("Latitude:", lat, "Longitude:", lng);
-        } else {
-            console.log("No results found.");
-        }
-    } catch (err) {
-        // Handle errors (network issues, invalid response, etc.)
-        console.error("Error occurred:", err);
-    }
+    //     // Check if there are results in the response
+    //     if (resp.results && resp.results.length >= 1) {
+    //         const lat = resp.results[resp.results.length - 1].geometry.lat;
+    //         const lng = resp.results[resp.results.length - 1].geometry.lng;
+    //         console.log("Latitude:", lat, "Longitude:", lng);
+    //     } else {
+    //         console.log("No results found.");
+    //     }
+    // } catch (err) {
+    //     // Handle errors (network issues, invalid response, etc.)
+    //     console.error("Error occurred:", err);
+    // }
 };
 
 startApp();
