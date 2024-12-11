@@ -38,7 +38,7 @@ const userAuth = async (req, res, next) => {
       const decoded =  jwt.verify(token, process.env.SECRET);
       const userId= decoded.user_id;
       const role =decoded.role
-      console.log("cfchghfxc",decoded,userId,role);
+      // console.log("cfchghfxc",decoded,userId,role);
       req.user = { userId, role };
         next();
      

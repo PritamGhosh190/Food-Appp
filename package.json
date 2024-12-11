@@ -18,7 +18,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "npx nodemon index.js"
   },
   "author": "Criston Mascarenhas[criston2011@gmail.com]",
   "license": "ISC",
