@@ -140,14 +140,22 @@ exports.deleteFood = async (req, res) => {
 exports.filterFood = async (req, res) => {
   try {
     // Get the filter values from the body of the request
-    const { name, type, cuisineType, restaurantName } = req.body;
+    const { name, type, cuisineType, restaurantName, restaurantId, category } = req.body;
+    console.log("vfcfc", req.body);
 
     // Build the query object for the filter
     let filter = {};
 
+    if (restaurantId) filter.restaurant = restaurantId;
+
     if (name) filter.name = new RegExp(name, 'i'); // Case-insensitive match
-    if (type) filter.type = type;
-    if (cuisineType) filter.cuisineType = cuisineType;
+    if (type) filter.type = new RegExp(type, 'i');
+    if (cuisineType) filter.cuisineType = new RegExp(cuisineType, 'i');
+    if (category) filter.category = new RegExp(category, 'i');
+
+    // if (restaurantId){
+    //   const foods = await Food.find({restaurant:restaurantId}).populate('restaurant');
+    // }
 
     // If restaurantName is provided, find the restaurant and add its ID to the filter
     if (restaurantName) {
@@ -160,6 +168,11 @@ exports.filterFood = async (req, res) => {
     }
 
     // Testing
+
+
+
+    console.log("njhx", filter);
+
 
     // Query the Food collection with the filter
     const foods = await Food.find(filter).populate('restaurant'); // Populate restaurant details if needed
@@ -178,6 +191,8 @@ exports.filterFood = async (req, res) => {
       }//to the image path
       return foods;
     });
+    console.log("foodssssss====",foods);
+    
     res.json({ foods });
   } catch (error) {
     console.error(error);
@@ -208,6 +223,7 @@ exports.addCart = async (req, res) => {
         .populate('user')
         .populate({
           path: 'food',
+
           model: Food,
           populate: {
             path: 'restaurant',
@@ -237,6 +253,8 @@ exports.addCart = async (req, res) => {
       });
 
       await newCartItem.save();
+      console.log("dffffffffffffffffffffffff");
+
       const cartDetils = await Cart.find({ user })
         .populate('user')
         .populate({
@@ -247,8 +265,9 @@ exports.addCart = async (req, res) => {
             model: Restaurant
           }
         });
+      console.log("dffffffffffffffffffffffff", cartDetils);
 
-      const resultCart = cartDetils.map(cart => {
+      const resultCart = cartDetils.map((cart) => {
         cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
         if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
           cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
@@ -291,7 +310,7 @@ exports.getCart = async (req, res) => {
       // return cartDetils;
     });
 
-    console.log("ngbjyvjctgcht", cartDetils);
+    // console.log("ngbjyvjctgcht", cartDetils);
 
     return res.status(200).json({ message: "Fetched cart Details", result: cartDetils });
   }
