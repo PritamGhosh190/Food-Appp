@@ -1,11 +1,14 @@
 const router = require('express').Router()
+const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
+
 
 const {
   addUser,
   getUser,
   updateUser,
   removeUser,
-  getUsers
+  getUsers,
+  addAddress
 } = require('../../Controllers/users/index')
 
 router.get('/', async (req, res) => {
@@ -15,6 +18,11 @@ router.get('/', async (req, res) => {
 router.post('/add', async (req, res) => {
   // console.log("bgcfgcxfgdcxdxg123");
   await addUser(req, res)
+})
+
+router.post('/addAddress', userAuth,async (req, res) => {
+  // console.log("bgcfgcxfgdcxdxg123");
+  await addAddress(req, res)
 })
 
 router.get('/user', async (req, res) => {

@@ -22,7 +22,7 @@ node_modules
 
 # Testing
 coverage
-# .env
+.env
 
 # Production
 build
