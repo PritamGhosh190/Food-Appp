@@ -18,6 +18,11 @@ router.use(
 )
 router.use('/restaurant',userAuth,require('./restaurant')
 )
+
+router.use('/billing',userAuth,require('./billing')
+)
+
+
 router.use('/restaurantAuth',userAuth1,require('./restaurant')
 )
 
