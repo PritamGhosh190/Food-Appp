@@ -21,7 +21,7 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 
 const addAddress = async (req, res) => {
     try {
-        // console.log("hjgvsgvgvgx============>",req.user);
+        console.log("hjgvsgvgvgx============>",req.user);
 
         const role = req.user.role
         // const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
@@ -35,7 +35,7 @@ const addAddress = async (req, res) => {
                 req.body.lng = resp.results[resp.results.length - 1].geometry.lng;
                 console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
             } else {
-                return res.status(402).json({
+                return res.status(206).json({
                     message: 'Inappropiate address try to enter proper address',
                     status: false
                 })
@@ -63,7 +63,7 @@ const addAddress = async (req, res) => {
         // Calculate distance between user and restaurant using Haversine formula
         const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng).toFixed(2);
     
-        // console.log("ccfgcgxgxxg", resturentData)
+        console.log("ccfgcgxgxxg", newAddress)
       await newAddress.save();
       return res.status(201).json({
         message: "Address added succesfully",
