@@ -18,6 +18,8 @@ const foodBillingSchema = new mongoose.Schema({
     deliveryCharges: { type: Number, required: true },
     convenienceCharges: { type: Number, required: true },
     otherCharges: { type: Number, required: true },
+    CGST: { type: Number, required: true },
+    SGST: { type: Number, required: true },
     paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed'], default: 'Pending' },
 }, { timestamps: true });
 
