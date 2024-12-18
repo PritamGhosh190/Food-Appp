@@ -213,8 +213,13 @@ exports.addCart = async (req, res) => {
     const user = req.user.userId;
 
     // Check if the item already exists in the user's cart
+    if(quantity<=0)
+    {
+      res.status(206).json({ message: "You can't add 0 quantity in the cart item"});
+    }
+    else{
     const existingCartItem = await Cart.findOne({ user, food });
-
+    
     if (existingCartItem) {
       // If the item exists, update the quantity
       existingCartItem.quantity += quantity; // Add new quantity to the existing one
@@ -278,6 +283,7 @@ exports.addCart = async (req, res) => {
       });
       res.status(201).json({ message: "Added to the Cart", result: resultCart });
     }
+  }
   }
   catch (error) {
     console.error(error);
