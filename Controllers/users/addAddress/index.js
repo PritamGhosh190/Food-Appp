@@ -24,8 +24,42 @@ const addAddress = async (req, res) => {
         console.log("hjgvsgvgvgx============>",req.user);
 
         const role = req.user.role
+
+        if(req.body.lat && req.body.lng){
+            const newAddress = new UserAddress({
+                mobilenum: req.body.mobileNumber,
+                userId: req.user.userId,
+                name: req.body.name,
+                address: req.body.address,
+                role: req.user.role,
+                lat: req.body.lat,
+                lng: req.body.lng,
+    
+            })
+            const resturentData= await Restaurant.findById({_id:req.body.restaurant});
+
+            const userLat = req.body.lat;
+            const userLng = req.body.lng;
+            const restaurantLat = resturentData.lat;
+    
+            const restaurantLng = resturentData.lng;
+            // console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
+        
+        
+            // Calculate distance between user and restaurant using Haversine formula
+            const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng).toFixed(2);
+        
+            console.log("ccfgcgxgxxg", newAddress)
+          await newAddress.save();
+          return res.status(201).json({
+            message: "Address added succesfully",
+            distance,
+            success: true,
+          });
+    
+        }
         // const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
-        if (req.body.address) {
+        else if (req.body.address) {
             const url = `${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
             const response = await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
             // console.log("url======================result==========================",response);
@@ -40,37 +74,41 @@ const addAddress = async (req, res) => {
                     status: false
                 })
             }
+            const newAddress = new UserAddress({
+                mobilenum: req.body.mobileNumber,
+                userId: req.user.userId,
+                name: req.body.name,
+                address: req.body.address,
+                role: req.user.role,
+                lat: req.body.lat,
+                lng: req.body.lng,
+    
+            })
+
+            const resturentData= await Restaurant.findById({_id:req.body.restaurant});
+
+            const userLat = req.body.lat;
+            const userLng = req.body.lng;
+            const restaurantLat = resturentData.lat;
+    
+            const restaurantLng = resturentData.lng;
+            // console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
+        
+        
+            // Calculate distance between user and restaurant using Haversine formula
+            const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng).toFixed(2);
+        
+            console.log("ccfgcgxgxxg", newAddress)
+          await newAddress.save();
+          return res.status(201).json({
+            message: "Address added succesfully",
+            distance,
+            success: true,
+          });
+    
         }
-        const newAddress = new UserAddress({
-            mobilenum: req.body.mobileNumber,
-            userId: req.user.userId,
-            name: req.body.name,
-            address: req.body.address,
-            role: req.user.role,
-            lat: req.body.lat,
-            lng: req.body.lng,
-
-        })
-        const resturentData= await Restaurant.findById({_id:req.body.restaurant});
-
-        const userLat = req.body.lat;
-        const userLng = req.body.lng;
-        const restaurantLat = resturentData.lat;
-        const restaurantLng = resturentData.lng;
-        // console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
-    
-    
-        // Calculate distance between user and restaurant using Haversine formula
-        const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng).toFixed(2);
-    
-        console.log("ccfgcgxgxxg", newAddress)
-      await newAddress.save();
-      return res.status(201).json({
-        message: "Address added succesfully",
-        distance,
-        success: true,
-      });
-
+       
+       
         
     } catch (err) {
         console.log("cgfcfcgbctd", err);
