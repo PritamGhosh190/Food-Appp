@@ -10,7 +10,27 @@ const addUser = async (req, res) => {
 
     const role = req.body.role
 // const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
-if(req.body.address)
+if(req.body.lat && req.body.lng)
+{
+  const user = {
+    mobileNumber: req.body.mobileNumber,
+    password: req.body.password,
+    email: req.body.email,
+    name: req.body.name,
+    Dob:req.body.dateofBirth,
+    address:req.body.address,
+    gender:req.body.gender,
+    role:req.body.role,
+    lat:req.body.lat,
+    lng:req.body.lng,
+    
+  }
+  // console.log("ccfgcgxgxxg from 1",user)
+
+    await userRegister(user, role, res)
+}
+
+else if(req.body.address)
 {
   const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
   const response =await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
@@ -26,23 +46,25 @@ if(req.body.address)
     status:false
   })
 }
+const user = {
+  mobileNumber: req.body.mobileNumber,
+  password: req.body.password,
+  email: req.body.email,
+  name: req.body.name,
+  Dob:req.body.dateofBirth,
+  address:req.body.address,
+  gender:req.body.gender,
+  role:req.body.role,
+  lat:req.body.lat,
+  lng:req.body.lng,
+  
 }
-    const user = {
-      mobileNumber: req.body.mobileNumber,
-      password: req.body.password,
-      email: req.body.email,
-      name: req.body.name,
-      Dob:req.body.dateofBirth,
-      address:req.body.address,
-      gender:req.body.gender,
-      role:req.body.role,
-      lat:req.body.lat,
-      lng:req.body.lng,
-      
-    }
-    console.log("ccfgcgxgxxg",user)
+// console.log("ccfgcgxgxxg",user)
 
     await userRegister(user, role, res)
+}
+    
+    
   }catch (err) {
     console.log("cgfcfcgbctd",err);
     

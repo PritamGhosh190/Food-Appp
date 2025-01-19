@@ -14,7 +14,24 @@ exports.createrestaurant = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
-    if(req.body.address)
+if(req.body.lat && req.body.lng){
+  const newrestaurant = new restaurant({
+    name: req.body.name,
+    image: req.file.path,  // Save the relative path to the image
+    address: req.body.address,
+    rating: req.body.rating,
+    category: req.body.category,
+    type: req.body.type,
+    cuisineType: req.body.cuisineType,
+    location: req.body.location,
+    lat:req.body.lat,
+    lng:req.body.lng,
+  });
+  const savedrestaurant = await newrestaurant.save();
+    res.status(201).json(savedrestaurant);
+}
+
+   else if(req.body.address)
       {
         const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
         const response =await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
@@ -30,25 +47,28 @@ exports.createrestaurant = async (req, res) => {
           status:false
         })
       }
+      const newrestaurant = new restaurant({
+        name: req.body.name,
+        image: req.file.path,  // Save the relative path to the image
+        address: req.body.address,
+        rating: req.body.rating,
+        category: req.body.category,
+        type: req.body.type,
+        cuisineType: req.body.cuisineType,
+        location: req.body.location,
+        lat:req.body.lat,
+        lng:req.body.lng,
+      });
+      const savedrestaurant = await newrestaurant.save();
+    res.status(201).json(savedrestaurant);
     }
     //   }
     // Create new restaurant object, including the image URL (relative to public path)
-    const newrestaurant = new restaurant({
-      name: req.body.name,
-      image: req.file.path,  // Save the relative path to the image
-      address: req.body.address,
-      rating: req.body.rating,
-      category: req.body.category,
-      type: req.body.type,
-      cuisineType: req.body.cuisineType,
-      location: req.body.location,
-      lat:23.4368,
-      lng:86.776,
-    });
+    
+
 
     // Save the new restaurant to the database
-    const savedrestaurant = await newrestaurant.save();
-    res.status(201).json(savedrestaurant);
+    
   } catch (err) {
     console.log("error",err);
     
