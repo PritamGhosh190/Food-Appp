@@ -14,37 +14,38 @@ exports.createrestaurant = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
-if(req.body.lat && req.body.lng){
-  const newrestaurant = new restaurant({
-    name: req.body.name,
-    image: req.file.path,  // Save the relative path to the image
-    address: req.body.address,
-    rating: req.body.rating,
-    category: req.body.category,
-    type: req.body.type,
-    cuisineType: req.body.cuisineType,
-    location: req.body.location,
-    lat:req.body.lat,
-    lng:req.body.lng,
-  });
-  const savedrestaurant = await newrestaurant.save();
-    res.status(201).json(savedrestaurant);
-}
+    if (req.body.lat && req.body.lng) {
+      const newrestaurant = new restaurant({
+        name: req.body.name,
+        image: req.file.path,  // Save the relative path to the image
+        address: req.body.address,
+        rating: req.body.rating,
+        category: req.body.category,
+        type: req.body.type,
+        cuisineType: req.body.cuisineType,
+        location: req.body.location,
+        lat: req.body.lat,
+        lng: req.body.lng,
+        assignUser: req.body.assignUser
+      });
+      const savedrestaurant = await newrestaurant.save();
+      res.status(201).json(savedrestaurant);
+    }
 
-   else if(req.body.address)
-      {
-        const url=`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
-        const response =await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
-        // console.log("url======================result==========================",response);
-        const resp = response.body;
-        if (resp.results && resp.results.length >= 1) {
-          req.body.lat = resp.results[resp.results.length - 1].geometry.lat;
-          req.body.lng = resp.results[resp.results.length - 1].geometry.lng;
-          console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
+    else if (req.body.address) {
+      const url = `${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
+
+      const response = await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
+      // console.log("url======================result==========================",response);
+      const resp = response.body;
+      if (resp.results && resp.results.length >= 1) {
+        req.body.lat = resp.results[resp.results.length - 1].geometry.lat;
+        req.body.lng = resp.results[resp.results.length - 1].geometry.lng;
+        console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
       } else {
         return res.status(402).json({
           message: 'Inappropiate address try to enter proper address',
-          status:false
+          status: false
         })
       }
       const newrestaurant = new restaurant({
@@ -56,22 +57,24 @@ if(req.body.lat && req.body.lng){
         type: req.body.type,
         cuisineType: req.body.cuisineType,
         location: req.body.location,
-        lat:req.body.lat,
-        lng:req.body.lng,
+        lat: req.body.lat,
+        lng: req.body.lng,
+        assignUser: req.body.assignUser
+
       });
       const savedrestaurant = await newrestaurant.save();
-    res.status(201).json(savedrestaurant);
+      res.status(201).json(savedrestaurant);
     }
     //   }
     // Create new restaurant object, including the image URL (relative to public path)
-    
+
 
 
     // Save the new restaurant to the database
-    
+
   } catch (err) {
-    console.log("error",err);
-    
+    console.log("error", err);
+
     res.status(500).json({ message: 'Error creating restaurant', error: err });
   }
 };

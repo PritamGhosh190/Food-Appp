@@ -30,7 +30,7 @@ router.use('/restaurantAuth',userAuth1,require('./restaurant')
 router.use('/auth', require('./auth'))
 
 // Admin Protected Route
-// router.use('/admin', userAuth, checkRole([ROLE.admin]), require('./admin'))
+router.use('/admin', userAuth, checkRole(["admin","seller"]), require('./admin'))
 
 // Admin & Operator Protected Route
 // router.use(
