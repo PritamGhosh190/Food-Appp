@@ -1,5 +1,7 @@
 // models/Food.js
 const mongoose = require('mongoose');
+const User = require("./User");
+
 
 const restaurantSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -12,6 +14,11 @@ const restaurantSchema = new mongoose.Schema({
   type:{ type: String, required: true },
   cuisineType: { type: String, required: true },
   location: { type: String, required: true },
+  assignUser: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: User, // Reference to the User model
+      required: true 
+    },
 });
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);

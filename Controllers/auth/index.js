@@ -10,6 +10,7 @@ const jwt = require("jsonwebtoken");
 // const getAuthButtons = require("./getAuthButtons");
 
 const userRegister = (userRequest, role, res) =>
+  
   register(userRequest, role, res);
 
 const userLogin = (userRequest,role, res) => login(userRequest,role, res);
@@ -30,12 +31,12 @@ const userAuth = async (req, res, next) => {
     //   domainname !="https://food-appp-keus.onrender.com" &&
     //   domainname != "192.168.31.7" 
     // ) {
-    // console.log( "I am here 1111111111=============================================>>>>>");
-
+      
     //   return res.sendStatus(401);
     // } else {
-    // console.log( "I am here 2222222=============================================>>>>>");
+      // console.log( "I am here 1111111111=============================================>>>>>");
       const decoded =  jwt.verify(token, process.env.SECRET);
+      // console.log( "I am here 2222222=============================================>>>>>");
       const userId= decoded.user_id;
       const role =decoded.role
       // console.log("cfchghfxc",decoded,userId,role);
@@ -92,6 +93,7 @@ const userAuth1 = async (req, res, next) => {
  * @param {Array} roles - list of accepted roles.
  * @const checkRole
  */
+
 const checkRole = (roles) => (req, res, next) => {
   !roles.includes(req.user.role)
     ? res.status(401).json("Unauthorized")
