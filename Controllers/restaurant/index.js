@@ -33,21 +33,23 @@ exports.createrestaurant = async (req, res) => {
     }
 
     else if (req.body.address) {
-      const url = `${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
-
-      const response = await superagent.get(`${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`);
-      // console.log("url======================result==========================",response);
-      const resp = response.body;
-      if (resp.results && resp.results.length >= 1) {
-        req.body.lat = resp.results[resp.results.length - 1].geometry.lat;
-        req.body.lng = resp.results[resp.results.length - 1].geometry.lng;
-        console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
-      } else {
-        return res.status(402).json({
-          message: 'Inappropiate address try to enter proper address',
-          status: false
-        })
-      }
+       const url = `${process.env.GEOLOCATIONURL}${req.body.address}${process.env.APIKEY}`
+            const response = await superagent.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${req.body.address}&key=${process.env.GOOGLEAPIKEY}`);
+            // console.log("url======================result==========================", dataType.results[0].geometry.location);
+            // console.log(`Location Latitude , Longitude = ${response.text.results[0]}`);
+            if(response.status === 200 ){
+              const dataType=JSON.parse(response.text);
+            if (dataType.results && dataType.results[0].geometry.location.lat && dataType.results[0].geometry.location.lng) {
+              req.body.lat = dataType.results[0].geometry.location.lat;
+              req.body.lng = dataType.results[0].geometry.location.lng;
+              // console.log("Latitude:", req.body.lat, "Longitude:", req.body.lng);
+            } else {
+              return res.status(402).json({
+                message: 'Inappropiate address try to enter proper address',
+                status: false
+              })
+            }
+          }
       const newrestaurant = new restaurant({
         name: req.body.name,
         image: req.file.path,  // Save the relative path to the image
@@ -73,9 +75,9 @@ exports.createrestaurant = async (req, res) => {
     // Save the new restaurant to the database
 
   } catch (err) {
-    console.log("error", err);
+    // console.log("error", err);
 
-    res.status(500).json({ message: 'Error creating restaurant', error: err });
+    res.status(205).json({ message: 'Error creating restaurant', error: err });
   }
 };
 
