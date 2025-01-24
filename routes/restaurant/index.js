@@ -34,33 +34,34 @@ const fileFilter = (req, file, cb) => {
 
 // Initialize multer with the defined storage and file filter
 const upload = multer({ storage: storage });
-// router.post("/fileUpload", async (req, res) => {
+// router.post("/add1", async (req, res) => {
 //     console.log("byggy",req.file);
     
-//     console.log("fileUpload");
+//     console.log("fileUpload",req.body);
 //     try {
-//         img_upload1(req, res, async (err) => {
-//             if (err) {
-//                 console.error("Error in uploading:", err);
-//                 return res.status(500).json(err);
-//             }
-//             if (req.file && req.file.filename !== undefined && req.file !== null) {
-//                 return res.status(200).json({
-//                     code: 0,
-//                     status: true,
-//                     result: "File uploaded",
-//                 });
-//             } else {
-//                 client.close();
-//                 return res.status(201).json({
-//                     code: 1,
-//                     result: "Please fill the mandatory fields !!",
-//                     message: "Mandatory Field Missing !!",
-//                 });
-//             }
-//         });
+//         upload.single('Restaurant_image')
+//         // img_upload1(req, res, async (err) => {
+//         //     if (err) {
+//         //         console.error("Error in uploading:", err);
+//         //         return res.status(500).json(err);
+//         //     }
+//         //     if (req.file && req.file.filename !== undefined && req.file !== null) {
+//         //         return res.status(200).json({
+//         //             code: 0,
+//         //             status: true,
+//         //             result: "File uploaded",
+//         //         });
+//         //     } else {
+//         //         client.close();
+//         //         return res.status(201).json({
+//         //             code: 1,
+//         //             result: "Please fill the mandatory fields !!",
+//         //             message: "Mandatory Field Missing !!",
+//         //         });
+//         //     }
+//         // });
 //     } catch (err) {
-//         // console.error("Error:", err);
+//         console.error("Error:", err);
 //         return res.status(500).json(err);
 //     }
 // });
@@ -68,7 +69,7 @@ const upload = multer({ storage: storage });
 
 
 // Route to create a new restaurant (with image upload)
-router.post('/add',checkRole(["admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
+router.post('/add',userAuth,checkRole(["admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
 
 // Route to update an existing restaurant (with image upload)
 // router.put('/:id', upload.single('image'), restaurantController.updaterestaurant);
