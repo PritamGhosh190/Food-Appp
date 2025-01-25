@@ -11,8 +11,12 @@ console.log("imageurl=======>>>", process.env.IMAGEURL);
 exports.createFood = async (req, res) => {
   try {
     // console.log("hiiiii",req.body);
-
-    const { name, restaurant, distance, price, rating, category, type, cuisineType } = req.body;
+    console.log('Request body:', req.body);
+    console.log('Uploaded file:', req.file);
+    const { name, restaurant, price, rating, category, type, cuisineType } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' });
+    }
     const image = req.file.path; // Get image path from multer
 
 
@@ -20,7 +24,7 @@ exports.createFood = async (req, res) => {
       name,
       image,
       restaurant,
-      distance,
+      distance:0,
       price,
       rating,
       category,
@@ -31,7 +35,7 @@ exports.createFood = async (req, res) => {
     await newFood.save();
     res.status(201).json({ message: 'Food detail created successfully', food: newFood });
   } catch (error) {
-    // console.log("errror",error);
+    console.log("errror",error);
 
     res.status(400).json({ message: 'Error creating food detail', error: error.message });
   }
@@ -97,11 +101,18 @@ exports.getAllFoods = async (req, res) => {
 
 // Get a specific food detail by ID
 exports.getFoodById = async (req, res) => {
+  console.log("vhfhffhfhvvhgh");
+
   try {
-    const food = await Food.findById(req.params.id);
+    const food = await Food.findById(req.params.id).populate('restaurant'); // Populate restaurant details if needed;
     if (!food) {
       return res.status(404).json({ message: 'Food not found' });
     }
+
+    food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+
+    // Prepend the base URL to the restaurant image only if it's missing
+    food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
     res.status(200).json(food);
   } catch (error) {
     res.status(400).json({ message: 'Error fetching food detail', error: error.message });
@@ -191,14 +202,41 @@ exports.filterFood = async (req, res) => {
       }//to the image path
       return foods;
     });
-    console.log("foodssssss====",foods);
-    
+    console.log("foodssssss====", foods);
+
     res.json({ foods });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+// exports.foodDetails = async (req, res) => {
+//   const id=req.params.id;
+//   try {
+
+//     const foods = await Food.findById(id).populate('restaurant'); // Populate restaurant details if needed
+
+//     const resultFood = foods.map(food => {
+//       food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+
+//       if (!food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+//         // Prepend the base URL to the restaurant image only if it's missing
+//         food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
+//       } else {
+//         // If it already has the base URL, just fix the slashes
+//         food.restaurant.image = food.restaurant.image.replace(/\\+/g, '/');
+//       }//to the image path
+//       return foods;
+//     });
+//     console.log("foodssssss====",foods);
+
+//     res.json({ foods });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// }
 
 
 exports.addCart = async (req, res) => {
@@ -213,77 +251,76 @@ exports.addCart = async (req, res) => {
     const user = req.user.userId;
 
     // Check if the item already exists in the user's cart
-    if(quantity<=0)
-    {
-      res.status(206).json({ message: "You can't add 0 quantity in the cart item"});
+    if (quantity <= 0) {
+      res.status(206).json({ message: "You can't add 0 quantity in the cart item" });
     }
-    else{
-    const existingCartItem = await Cart.findOne({ user, food });
-    
-    if (existingCartItem) {
-      // If the item exists, update the quantity
-      existingCartItem.quantity += quantity; // Add new quantity to the existing one
-      await existingCartItem.save();
-      const cartDetils = await Cart.find({ user })
-        .populate('user')
-        .populate({
-          path: 'food',
+    else {
+      const existingCartItem = await Cart.findOne({ user, food });
 
-          model: Food,
-          populate: {
-            path: 'restaurant',
-            model: Restaurant
+      if (existingCartItem) {
+        // If the item exists, update the quantity
+        existingCartItem.quantity += quantity; // Add new quantity to the existing one
+        await existingCartItem.save();
+        const cartDetils = await Cart.find({ user })
+          .populate('user')
+          .populate({
+            path: 'food',
+
+            model: Food,
+            populate: {
+              path: 'restaurant',
+              model: Restaurant
+            }
+          });
+
+        const resultFood = cartDetils.map(cart => {
+          cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+          if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+            cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+          } else {
+            cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
           }
+          return cartDetils;
         });
 
-      const resultFood = cartDetils.map(cart => {
-        cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
-        if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
-          cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
-        } else {
-          cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
-        }
-        return cartDetils;
-      });
+        // console.log("ngbjyvjctgcht",resultFood);
 
-      // console.log("ngbjyvjctgcht",resultFood);
-
-      return res.status(200).json({ message: "Item updated in cart", result: resultFood });
-    } else {
-      // If it doesn't exist, create a new cart item
-      const newCartItem = new Cart({
-        user,
-        food,
-        quantity,
-      });
-
-      await newCartItem.save();
-      console.log("dffffffffffffffffffffffff");
-
-      const cartDetils = await Cart.find({ user })
-        .populate('user')
-        .populate({
-          path: 'food',
-          model: Food,
-          populate: {
-            path: 'restaurant',
-            model: Restaurant
-          }
+        return res.status(200).json({ message: "Item updated in cart", result: resultFood });
+      } else {
+        // If it doesn't exist, create a new cart item
+        const newCartItem = new Cart({
+          user,
+          food,
+          quantity,
         });
-      console.log("dffffffffffffffffffffffff", cartDetils);
 
-      const resultCart = cartDetils.map((cart) => {
-        cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
-        if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
-          cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
-        } else {
-          cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
-        }
-        return cartDetils;
-      });
-      res.status(201).json({ message: "Added to the Cart", result: resultCart });
+        await newCartItem.save();
+        console.log("dffffffffffffffffffffffff");
+
+        const cartDetils = await Cart.find({ user })
+          .populate('user')
+          .populate({
+            path: 'food',
+            model: Food,
+            populate: {
+              path: 'restaurant',
+              model: Restaurant
+            }
+          });
+        console.log("dffffffffffffffffffffffff", cartDetils);
+
+        const resultCart = cartDetils.map((cart) => {
+          cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+          if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
+            cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+          } else {
+            cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+          }
+          return cartDetils;
+        });
+        res.status(201).json({ message: "Added to the Cart", result: resultCart });
+      }
     }
-  }
   }
   catch (error) {
     console.error(error);

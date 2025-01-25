@@ -1,4 +1,5 @@
-const restaurant = require("../../models/Restaurant");
+const Food = require("../../models/Food");
+const Restaurant = require("../../models/Restaurant");
 require('dotenv').config();  // Assuming the model is named 'Food.js'
 const superagent = require('superagent');
 
@@ -60,7 +61,7 @@ exports.createrestaurant = async (req, res) => {
         return res.status(500).json({ message: 'Failed to fetch geolocation.' });
       }
 
-      const newRestaurant = new restaurant({
+      const newRestaurant = new Restaurant({
         name: req.body.name,
         image: req.file.path,
         address: req.body.address,
@@ -82,7 +83,7 @@ exports.createrestaurant = async (req, res) => {
   } catch (err) {
     if (err.code === 11000 && err.keyPattern?.assignUser) {
       // Handle unique constraint violation for assignUser
-    console.error('Error creating restaurant from here :', err);
+    // console.error('Error creating restaurant from here :', err);
 
       return res.status(203).json({ message: 'This user is already assigned to a restaurant.' });
     }
@@ -92,6 +93,34 @@ exports.createrestaurant = async (req, res) => {
   }
 };
 
+exports.getRestaurantAndFoods = async (req, res) => {
+  // console.log("gghjjgjgjh",req.user.userId);
+  
+  try {
+    // If an image is uploaded, we add it to the update
+   const restaurant=await Restaurant.findOne({assignUser:req.user.userId});
+   restaurant.image = process.env.IMAGEURL + restaurant.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+   if(restaurant)
+   {
+    const foods= await Food.find({restaurant:restaurant.id})
+    if(foods)
+    {
+      const resultFood = foods.map(food => {
+        // const updatedPath = filePath.replace(/\\+/g, '/'); 
+        food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+        return foods;
+      });
+    }
+    res.status(200).json({restaurant,foods});
+
+   }
+
+  } catch (err) {
+    console.log(err);
+    
+    res.status(500).json({ message: 'Error updating restaurant', error: err });
+  }
+};
 
 
 

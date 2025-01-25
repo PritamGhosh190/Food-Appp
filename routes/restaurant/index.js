@@ -76,6 +76,7 @@ router.post('/add',userAuth,checkRole(["admin","seller"]), upload.single('Restau
 
 // // Other routes remain unchanged
 router.get('/', restaurantController.getAllRestaurants);
+router.get('/getRestaurantAndFoods', restaurantController.getRestaurantAndFoods);
 // router.get('/:id', restaurantController.getrestaurantById);
 // router.delete('/:id', restaurantController.deleterestaurant);
 

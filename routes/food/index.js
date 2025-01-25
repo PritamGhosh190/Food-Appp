@@ -2,8 +2,9 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance } = require("../../Controllers/food");
-const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
+const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance ,foodDetails} = require("../../Controllers/food");
+const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth');
+const { log } = require('async');
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'Upload/Foods');
   },
+  limits: { fileSize: 10 * 1024 * 1024 },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Date-based unique filename
   }
@@ -25,7 +27,11 @@ router.post('/add',checkRole(["admin","seller"]), upload.single('image'), create
 router.get('/foods', getAllFoods);
 
 // Get a food detail by ID
-router.get('/foods/:id', getFoodById);
+router.get('/foods/:id',async(req,res)=>{
+  // console.log("gvgvgggvghhghg");
+  
+   await getFoodById(req,res)
+  });
 
 // Update food details by ID
 router.put('/foods/:id', updateFood);
