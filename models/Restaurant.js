@@ -17,7 +17,8 @@ const restaurantSchema = new mongoose.Schema({
   assignUser: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: User, // Reference to the User model
-      required: true 
+      required: true , 
+      unique: true, // Ensure assignUser is unique
     },
 });
 

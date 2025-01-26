@@ -90,6 +90,7 @@ const login = async (userRequest,role,res) => {
         mobileNumber: user.mobileNumber,
         role: user.role,
         email: user.email,
+        id:user._id,
         token: token,
         expiresIn: TOKEN_EXPIRATION,
       };

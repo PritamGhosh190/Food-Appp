@@ -11,7 +11,7 @@ const foodSchema = new mongoose.Schema({
     required: true 
   },
   image: { type: String, required: true }, // URL of the image (you can use multer for file upload)
-  distance: { type: Number, required: true },
+  distance: { type: Number},
   price: { type: Number, required: true },
   rating: { type: Number, required: true },
   category: { type: String, required: true },
