@@ -148,7 +148,7 @@ exports.updaterestaurant = async (req, res) => {
 exports.getAllRestaurants = async (req, res) => {
   try {
     // Fetch all restaurants from the database
-    const restaurants = await restaurant.find();
+    const restaurants = await Restaurant.find().populate('assignUser');;
 
     // Define the base URL for the images (local IP address and port)
     const baseUrl = 'http://192.168.0.201:3006/';

@@ -5,14 +5,17 @@ const Cart = require("../../models/Cart")
 const User = require("../../models/User")
 require('dotenv').config();
 const Joi = require('joi')
-console.log("imageurl=======>>>", process.env.IMAGEURL);
+const path = require('path');
+const fs = require('fs');
+
+// console.log("imageurl=======>>>", process.env.IMAGEURL);
 
 // Create a new food detail
 exports.createFood = async (req, res) => {
   try {
     // console.log("hiiiii",req.body);
-    console.log('Request body:', req.body);
-    console.log('Uploaded file:', req.file);
+    // console.log('Request body:', req.body);
+    // console.log('Uploaded file:', req.file);
     const { name, restaurant, price, rating, category, type, cuisineType } = req.body;
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
@@ -101,7 +104,7 @@ exports.getAllFoods = async (req, res) => {
 
 // Get a specific food detail by ID
 exports.getFoodById = async (req, res) => {
-  console.log("vhfhffhfhvvhgh");
+  // console.log("vhfhffhfhvvhgh");
 
   try {
     const food = await Food.findById(req.params.id).populate('restaurant'); // Populate restaurant details if needed;
@@ -122,12 +125,36 @@ exports.getFoodById = async (req, res) => {
 // Update food details by ID
 exports.updateFood = async (req, res) => {
   try {
-    const updatedFood = await Food.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const foodId = req.params.id;
+    console.log('Request body:', req.body,"nbvggnvgggfghgh",req.params.id);
+    console.log('Uploaded file:', req.file);
+    // Find the existing food document
+    const existingFood = await Food.findById(foodId);
+    if (!existingFood) {
+      return res.status(404).json({ message: 'Food not found' });
+    }
+
+    // Check if a new image is uploaded
+    if (req.file) {
+      // Delete the old image from the file system
+      const oldImagePath = existingFood.image;
+      if (oldImagePath && fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+
+      // Update the image field with the new image path
+      req.body.image = req.file.path;
+    }
+
+    // Update the food document
+    const updatedFood = await Food.findByIdAndUpdate(foodId, req.body, { new: true });
     if (!updatedFood) {
       return res.status(404).json({ message: 'Food not found' });
     }
+
     res.status(200).json({ message: 'Food detail updated successfully', food: updatedFood });
   } catch (error) {
+    console.error('Error updating food detail:', error);
     res.status(400).json({ message: 'Error updating food detail', error: error.message });
   }
 };

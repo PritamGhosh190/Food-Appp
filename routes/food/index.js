@@ -5,6 +5,8 @@ const path = require('path');
 const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance ,foodDetails} = require("../../Controllers/food");
 const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth');
 const { log } = require('async');
+const fs = require('fs');
+
 
 const router = express.Router();
 
@@ -22,6 +24,8 @@ const upload = multer({ storage: storage });
 
 // Create a new food entry
 router.post('/add',checkRole(["admin","seller"]), upload.single('image'), createFood);
+// Update food details by ID
+router.put('/update/:id',checkRole(["admin","seller"]), upload.single('image'), updateFood);
 
 // Get all food details
 router.get('/foods', getAllFoods);
@@ -33,8 +37,7 @@ router.get('/foods/:id',async(req,res)=>{
    await getFoodById(req,res)
   });
 
-// Update food details by ID
-router.put('/foods/:id', updateFood);
+
 
 // Delete food by ID
 router.delete('/foods/:id', deleteFood);
