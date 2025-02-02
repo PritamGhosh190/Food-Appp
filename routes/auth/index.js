@@ -7,6 +7,8 @@ const {
   checkRole,
   userRegister,
   serializeUser,
+  otpGenerate,
+  otpVerify,
   addAuthButton,
   getAuthButtons,
   updateAuthButton,
@@ -47,6 +49,16 @@ router.post('/login', async (req, res) => {
   // console.log("reqdata",req.body);
   const {role} = req.body
   await userLogin(req.body, role, res)
+})
+
+router.post('/sendOtp', async (req, res) => {
+  // console.log("reqdata",req.body);
+  await otpGenerate(req.body,res)
+})
+
+router.post('/verifyOtp', async (req, res) => {
+  // console.log("reqdata",req.body);
+  await otpVerify(req.body, res)
 })
 
 router.post(

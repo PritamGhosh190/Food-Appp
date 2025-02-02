@@ -3,6 +3,7 @@ const register = require("./register");
 const login = require("./login");
 require('dotenv').config(); 
 const jwt = require("jsonwebtoken");
+const { otpGenerate,otpVerify} = require('./otp')
 
 // const addAuthButton = require("./addAuthButton");
 // const removeAuthButton = require('./removeAuthButton')
@@ -127,6 +128,8 @@ module.exports = {
   userRegister,
   checkRole,
   serializeUser,
+  otpGenerate,
+  otpVerify
   // addAuthButton,
   // removeAuthButton,
   // updateAuthButton,
