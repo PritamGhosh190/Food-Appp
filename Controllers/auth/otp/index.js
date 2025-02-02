@@ -44,7 +44,7 @@ const otpGenerate = async (userRequest, res) => {
             .send(requestBody)
             .set('Content-Type', 'application/x-www-form-urlencoded') // Required for Twilio API
             .then(response => {
-                console.log('Success:', response.body);
+                // console.log('Success:', response.body);
                 return res.status(200).json({
                     message: "Otp Sent Successfully",
                     success: true,
