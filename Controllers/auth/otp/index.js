@@ -32,25 +32,28 @@ const otpGenerate = async (userRequest, res) => {
                 success: false,
             });
         }
-        const url = `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`;
-        const requestBody = {
-            To:`+91${mobileNumber}`, // Replace with the recipient's phone number
-            Channel: 'sms'     // or 'call' for voice verification
-        };
 
-        superagent
-            .post(url)
-            .auth(username, password) // Basic Auth
-            .send(requestBody)
-            .set('Content-Type', 'application/x-www-form-urlencoded') // Required for Twilio API
-            .then(response => {
-                // console.log('Success:', response.body);
-                return res.status(200).json({
-                    message: "Otp Sent Successfully",
-                    success: true,
-                });
+        return res.json({ message: "OTP Sent Successfully" ,data:user});
 
-            })
+        // const url = `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`;
+        // const requestBody = {
+        //     To:`+91${mobileNumber}`, // Replace with the recipient's phone number
+        //     Channel: 'sms'     // or 'call' for voice verification
+        // };
+
+        // superagent
+        //     .post(url)
+        //     .auth(username, password) // Basic Auth
+        //     .send(requestBody)
+        //     .set('Content-Type', 'application/x-www-form-urlencoded') // Required for Twilio API
+        //     .then(response => {
+        //         // console.log('Success:', response.body);
+        //         return res.status(200).json({
+        //             message: "Otp Sent Successfully",
+        //             success: true,
+        //         });
+
+        //     })
 
 
     } catch (err) {
