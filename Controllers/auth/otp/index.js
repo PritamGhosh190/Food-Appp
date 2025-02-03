@@ -54,10 +54,10 @@ const otpGenerate = async (userRequest, res) => {
 
 
     } catch (err) {
-        // console.log("bhbhhb",err);
-        return res.status(500).json({
+        console.log("bhbhhb",err);
+        return res.status(203).json({
             reason: "server",
-            message: errorMsg,
+            message: err,
             success: false,
         });
     }
