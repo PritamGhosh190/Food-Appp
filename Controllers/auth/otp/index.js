@@ -24,14 +24,14 @@ const otpGenerate = async (userRequest, res) => {
     // console.log("reqdata111",userRequest);
     try {
         let { mobileNumber } = userRequest;
-        let user = await User.findOne({ mobileNumber });
-        if (!user) {
-            return res.status(404).json({
-                reason: "username",
-                message: MSG.usernameNotExist,
-                success: false,
-            });
-        }
+        // let user = await User.findOne({ mobileNumber });
+        // if (!user) {
+        //     return res.status(404).json({
+        //         reason: "username",
+        //         message: MSG.usernameNotExist,
+        //         success: false,
+        //     });
+        // }
 
         // return res.json({ message: "OTP Sent Successfully" ,data:user});
 
