@@ -21,12 +21,10 @@ const serviceSid = process.env.TWILIO_ACCOUNT_SID;
 
 
 const otpGenerate = async (req, res) => {
-    // console.log("reqdata111",userRequest);
     try {
-        let { mobileNumber} = req.body;
-        let user = await User.findOne({mobileNumber});
-        // console.log("ghghhhhhhv",user);
-        
+        let { mobileNumber } = req.body;
+        let user = await User.findOne({ mobileNumber });
+
         if (!user) {
             return res.status(404).json({
                 reason: "username",
@@ -35,46 +33,66 @@ const otpGenerate = async (req, res) => {
             });
         }
 
-        // return res.json({ message: "OTP Sent Successfully" ,data:user});
-
         const url = `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`;
         const requestBody = {
-            To:`+91${mobileNumber}`, // Replace with the recipient's phone number
-            Channel: 'sms'     // or 'call' for voice verification
+            To: `+91${mobileNumber}`, // Recipient's phone number
+            Channel: "sms", // 'sms' or 'call' for voice verification
         };
 
         superagent
             .post(url)
             .auth(username, password) // Basic Auth
             .send(requestBody)
-            .set('Content-Type', 'application/x-www-form-urlencoded') // Required for Twilio API
-            .then(response => {
-                // console.log('Success:', response.body);
-                return res.status(200).json({
-                    message: "Otp Sent Successfully",
-                    success: true,
-                });
+            .set("Content-Type", "application/x-www-form-urlencoded") // Required for Twilio API
+            .then((response) => {
+                const statusCode = response.status; // Get HTTP status code
 
+                // ✅ Check if Twilio API responded successfully (200–210)
+                if (statusCode >= 200 && statusCode <= 210) {
+                    return res.status(200).json({
+                        message: "OTP Sent Successfully",
+                        success: true,
+                    });
+                } else {
+                    // ✅ If Twilio returns an unexpected status, throw an error
+                    throw {
+                        status: statusCode,
+                        reason: "twilio",
+                        message: "Failed to send OTP, please try again.",
+                    };
+                }
             })
+            .catch((err) => {
+                // ✅ Catch any errors from Twilio API, network, or request issues
+                let statusCode = err.status || 500;
+                let errorMessage = err.message || "Failed to send OTP";
 
+                return res.status(statusCode).json({
+                    reason: err.reason || "third-party",
+                    message: errorMessage,
+                    success: false,
+                });
+            });
 
     } catch (err) {
-        console.log("bhbhhb",err);
-        return res.status(203).json({
+        // ✅ Catch server-side errors, request validation issues, or unexpected failures
+        let errorMsg = err.message || "Internal Server Error";
+        let statusCode = err.status || 500;
+
+        return res.status(statusCode).json({
             reason: "server",
-            message: err,
+            message: errorMsg,
             success: false,
         });
     }
 };
 
-const otpVerify = async (userRequest, res) => {
-    // console.log("reqdata111",userRequest);
-    try {
 
+const otpVerify = async (userRequest, res) => {
+    try {
         let { mobileNumber, otp } = userRequest;
         let user = await User.findOne({ mobileNumber });
-        // console.log("users",user);
+
         if (!user) {
             return res.status(404).json({
                 reason: "username",
@@ -85,60 +103,84 @@ const otpVerify = async (userRequest, res) => {
 
         const url = `https://verify.twilio.com/v2/Services/${serviceSid}/VerificationCheck`;
         const requestBody = {
-            To:`+91${mobileNumber}`, // Replace with the recipient's phone number
-            Code: otp    // or 'call' for voice verification
+            To: `+91${mobileNumber}`,
+            Code: otp
         };
 
         superagent
             .post(url)
             .auth(username, password) // Basic Auth
             .send(requestBody)
-            .set('Content-Type', 'application/x-www-form-urlencoded') // Required for Twilio API
+            .set('Content-Type', 'application/x-www-form-urlencoded')
             .then(response => {
+                const twilioResponse = response.body;
+                const statusCode = response.status; // Get HTTP status code
 
-                // Sign in the token and issue it to the user
-                let token = jwt.sign(
-                    {
-                        user_id: user._id,
-                        role: user.role,
+                // ✅ Check if Twilio response status is between 200 and 210
+                if (twilioResponse.status === "approved") {
+                    // Generate JWT token
+                    let token = jwt.sign(
+                        {
+                            user_id: user._id,
+                            role: user.role,
+                            mobileNumber: user.mobileNumber,
+                            email: user.email,
+                        },
+                        process.env.SECRET,
+                        { expiresIn: "7 days" }
+                    );
+
+                    let result = {
                         mobileNumber: user.mobileNumber,
+                        role: user.role,
                         email: user.email,
-                    },
-                    process.env.SECRET
-                    ,
-                    { expiresIn: "7 days" }
-                );
+                        id: user._id,
+                        token: token,
+                        userDetails: user,
+                        expiresIn: TOKEN_EXPIRATION,
+                    };
 
-                let result = {
-                    mobileNumber: user.mobileNumber,
-                    role: user.role,
-                    email: user.email,
-                    id: user._id,
-                    token: token,
-                    userDetails:user,
-                    expiresIn: TOKEN_EXPIRATION,
-                };
-
-                return res.status(200).json({
-                    ...result,
-                    message: MSG.loginSuccess,
-                    success: true,
-                });
+                    return res.status(202).json({
+                        ...result,
+                        message: MSG.loginSuccess,
+                        success: true,
+                    });
+                } else {
+                    // ✅ If OTP verification fails, throw an error to be caught in `.catch()`
+                    throw {
+                        status: 400,
+                        reason: "otp",
+                        message: "Invalid or expired OTP",
+                        twilioStatus: statusCode
+                    };
+                }
             })
+            .catch(err => {
+                // ✅ Catch any Twilio API errors, network errors, or invalid OTP
+                let statusCode = err.status || 500; // Default to 500 if no specific status
+                let errorMessage = err.message || "Failed to verify OTP";
+
+                return res.status(statusCode).json({
+                    reason: err.reason || "third-party",
+                    message: errorMessage,
+                    success: false,
+                    twilioStatus: err.twilioStatus || null
+                });
+            });
+
     } catch (err) {
-        // console.log("bhbhhb",err);
-        let errorMsg = MSG.loginError;
-        if (err.isJoi === true) {
-            err.status = 403;
-            errorMsg = err.message;
-        }
-        return res.status(500).json({
+        // ✅ Catch server-side errors, request validation issues, or unexpected errors
+        let errorMsg = err.message || MSG.loginError;
+        let statusCode = err.status || 500; // Default to 500 if no specific status
+
+        return res.status(statusCode).json({
             reason: "server",
             message: errorMsg,
             success: false,
         });
     }
 };
+
 
 
 module.exports = {
