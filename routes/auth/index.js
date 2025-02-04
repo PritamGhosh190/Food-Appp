@@ -54,7 +54,6 @@ router.post('/login', async (req, res) => {
 router.post('/sendOtp', async (req, res) => {
   // console.log("reqdata",req.body);
   // return res.json({ message: "OTP Sent Successfully" });
-
   await otpGenerate(req,res)
 })
 
