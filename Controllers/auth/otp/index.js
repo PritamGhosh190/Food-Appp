@@ -20,18 +20,20 @@ const password = process.env.TWILIO_AUTH_TOKEN;  // Replace with your Twilio Aut
 const serviceSid = process.env.TWILIO_ACCOUNT_SID;
 
 
-const otpGenerate = async (userRequest, res) => {
+const otpGenerate = async (req, res) => {
     // console.log("reqdata111",userRequest);
     try {
-        let { mobileNumber } = userRequest;
-        // let user = await User.findOne({ mobileNumber });
-        // if (!user) {
-        //     return res.status(404).json({
-        //         reason: "username",
-        //         message: MSG.usernameNotExist,
-        //         success: false,
-        //     });
-        // }
+        let { mobileNumber} = req.body;
+        let user = await User.findOne({mobileNumber});
+        // console.log("ghghhhhhhv",user);
+        
+        if (!user) {
+            return res.status(404).json({
+                reason: "username",
+                message: MSG.usernameNotExist,
+                success: false,
+            });
+        }
 
         // return res.json({ message: "OTP Sent Successfully" ,data:user});
 
