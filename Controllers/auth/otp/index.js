@@ -115,6 +115,7 @@ const otpVerify = async (userRequest, res) => {
                     email: user.email,
                     id: user._id,
                     token: token,
+                    userDetails:user,
                     expiresIn: TOKEN_EXPIRATION,
                 };
 
