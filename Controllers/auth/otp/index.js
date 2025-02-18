@@ -23,15 +23,15 @@ const serviceSid = process.env.TWILIO_ACCOUNT_SID;
 const otpGenerate = async (req, res) => {
     try {
         let { mobileNumber } = req.body;
-        let user = await User.findOne({ mobileNumber });
+        // let user = await User.findOne({ mobileNumber });
 
-        if (!user) {
-            return res.status(404).json({
-                reason: "username",
-                message: MSG.usernameNotExist,
-                success: false,
-            });
-        }
+        // if (!user) {
+        //     return res.status(404).json({
+        //         reason: "username",
+        //         message: MSG.usernameNotExist,
+        //         success: false,
+        //     });
+        // }
 
         const url = `https://verify.twilio.com/v2/Services/${serviceSid}/Verifications`;
         const requestBody = {
@@ -94,13 +94,7 @@ const otpVerify = async (userRequest, res) => {
         let { mobileNumber, otp } = userRequest;
         let user = await User.findOne({ mobileNumber });
 
-        if (!user) {
-            return res.status(404).json({
-                reason: "username",
-                message: MSG.usernameNotExist,
-                success: false,
-            });
-        }
+
 
         const url = `https://verify.twilio.com/v2/Services/${serviceSid}/VerificationCheck`;
         const requestBody = {
@@ -120,32 +114,79 @@ const otpVerify = async (userRequest, res) => {
                 // ✅ Check if Twilio response status is between 200 and 210
                 if (twilioResponse.status === "approved") {
                     // Generate JWT token
-                    let token = jwt.sign(
-                        {
-                            user_id: user._id,
-                            role: user.role,
+
+                    if (!user) {
+                        const newUser = new User({
+                            mobileNumber,
+                        });
+                        newUser.save()
+                            .then((savedUser) => {
+                                // console.log('New user created successfully.', savedUser);
+                                let token = jwt.sign(
+                                    {
+                                        user_id: savedUser._id,
+                                        role: savedUser.role,
+                                        mobileNumber: savedUser.mobileNumber,
+                                        email: savedUser.email,
+                                    },
+                                    process.env.SECRET,
+                                    { expiresIn: "7 days" }
+                                );
+
+                                let result = {
+                                    mobileNumber: savedUser.mobileNumber,
+                                    role: savedUser.role,
+                                    email: savedUser.email,
+                                    id: savedUser._id,
+                                    token: token,
+                                    userDetails: savedUser,
+                                    expiresIn: TOKEN_EXPIRATION,
+                                };
+
+                                return res.status(202).json({
+                                    ...result,
+                                    message: MSG.loginSuccess,
+                                    success: true,
+                                });
+                            })
+                            .catch(err => {
+                                console.error('Error saving new user:', err.message);
+                                return res.status(401).json({
+                                    reason: "server",
+                                    message: err.message,
+                                    success: false,
+                                });
+                            });
+                    }
+
+                    else {
+                        let token = jwt.sign(
+                            {
+                                user_id: user._id,
+                                role: user.role,
+                                mobileNumber: user.mobileNumber,
+                                email: user.email,
+                            },
+                            process.env.SECRET,
+                            { expiresIn: "7 days" }
+                        );
+
+                        let result = {
                             mobileNumber: user.mobileNumber,
+                            role: user.role,
                             email: user.email,
-                        },
-                        process.env.SECRET,
-                        { expiresIn: "7 days" }
-                    );
+                            id: user._id,
+                            token: token,
+                            userDetails: user,
+                            expiresIn: TOKEN_EXPIRATION,
+                        };
 
-                    let result = {
-                        mobileNumber: user.mobileNumber,
-                        role: user.role,
-                        email: user.email,
-                        id: user._id,
-                        token: token,
-                        userDetails: user,
-                        expiresIn: TOKEN_EXPIRATION,
-                    };
-
-                    return res.status(202).json({
-                        ...result,
-                        message: MSG.loginSuccess,
-                        success: true,
-                    });
+                        return res.status(202).json({
+                            ...result,
+                            message: MSG.loginSuccess,
+                            success: true,
+                        });
+                    }
                 } else {
                     // ✅ If OTP verification fails, throw an error to be caught in `.catch()`
                     throw {
