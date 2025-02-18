@@ -69,6 +69,7 @@ const otpGenerate = async (req, res) => {
 
                 return res.status(statusCode).json({
                     reason: err.reason || "third-party",
+                    
                     message: errorMessage,
                     success: false,
                 });

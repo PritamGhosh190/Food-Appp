@@ -55,6 +55,7 @@ const addAddress = async (req, res) => {
             message: "Address added succesfully",
             distance,
             success: true,
+            newAddress
           });
     
         }
@@ -114,7 +115,7 @@ const addAddress = async (req, res) => {
        
         
     } catch (err) {
-        // console.log("cgfcfcgbctd", err);
+        console.log("cgfcfcgbctd", err);
 
         return res.status(205).json({
             message: 'Unable to add user',

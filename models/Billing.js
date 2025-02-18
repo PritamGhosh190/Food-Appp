@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require("./User");
 const Food = require("./Food");
 const Restaurant = require("./Restaurant");
+const Address=require("./Address")
 
 const foodDetailSchema = new mongoose.Schema({
     foodId: { type: mongoose.Schema.Types.ObjectId, ref: Food },
@@ -12,6 +13,7 @@ const foodDetailSchema = new mongoose.Schema({
 const foodBillingSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: User, required: true },
     restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: Restaurant, required: true },
+    address: { type: mongoose.Schema.Types.ObjectId, ref: Address, required: true },
     foodDetails: [foodDetailSchema],
     totalAmount: { type: Number, required: true },
     grossAmount: { type: Number, required: true },
