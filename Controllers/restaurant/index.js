@@ -2,6 +2,8 @@ const Food = require("../../models/Food");
 const Restaurant = require("../../models/Restaurant");
 require('dotenv').config();  // Assuming the model is named 'Food.js'
 const superagent = require('superagent');
+const mongoose = require('mongoose');
+
 
 
 
@@ -147,20 +149,27 @@ exports.updaterestaurant = async (req, res) => {
 
 exports.getAllRestaurants = async (req, res) => {
   try {
-    // Fetch all restaurants from the database
-    const restaurants = await Restaurant.find().populate('assignUser');;
+    // console.log(req.user, "User Details");
 
-    // Define the base URL for the images (local IP address and port)
-    const baseUrl = 'http://192.168.0.201:3006/';
+    // Define the query condition based on user type
+    let query = {};
+    if (req.user.role === 'seller') {
+    // console.log(req.user, "User Details2222222");
+      
+      query.assignUser = new mongoose.Types.ObjectId(req.user.userId); // Convert to ObjectId
+    }
 
-    // Add the base URL to the image path for each restaurant
+    // Fetch restaurants based on the query
+    const restaurants = await Restaurant.find(query).populate('assignUser');
+
+    // Add the base URL to the image path
+    const baseUrl = process.env.IMAGEURL; // Use environment variable for base URL
+
     const restaurantsWithImages = restaurants.map(restaurant => {
-      // const updatedPath = filePath.replace(/\\+/g, '/'); 
-      restaurant.image = process.env.IMAGEURL + restaurant.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+      restaurant.image = baseUrl + restaurant.image.replace(/\\+/g, '/');
       return restaurant;
     });
 
-    // Return the updated restaurant data with full image URLs
     res.status(200).json(restaurantsWithImages);
   } catch (err) {
     console.log("Error fetching restaurants:", err);

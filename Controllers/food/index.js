@@ -126,8 +126,8 @@ exports.getFoodById = async (req, res) => {
 exports.updateFood = async (req, res) => {
   try {
     const foodId = req.params.id;
-    console.log('Request body:', req.body,"nbvggnvgggfghgh",req.params.id);
-    console.log('Uploaded file:', req.file);
+    // console.log('Request body:', req.body,"nbvggnvgggfghgh",req.params.id);
+    // console.log('Uploaded file:', req.file);
     // Find the existing food document
     const existingFood = await Food.findById(foodId);
     if (!existingFood) {
