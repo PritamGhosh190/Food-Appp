@@ -4,6 +4,7 @@ const getUsers = require('./getUsers')
 const updateUser = require('./updateUser')
 const removeUser = require('./removeUser')
 const addAddress = require('./addAddress')
+const coupon = require('./coupon')
 
 module.exports = {
   addUser,
@@ -11,5 +12,6 @@ module.exports = {
   getUsers,
   updateUser,
   removeUser,
-  addAddress
+  addAddress,
+  coupon
 }

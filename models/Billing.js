@@ -3,6 +3,7 @@ const User = require("./User");
 const Food = require("./Food");
 const Restaurant = require("./Restaurant");
 const Address=require("./Address")
+const Coupon=require("./Coupon")
 
 const foodDetailSchema = new mongoose.Schema({
     foodId: { type: mongoose.Schema.Types.ObjectId, ref: Food },
@@ -16,6 +17,9 @@ const foodBillingSchema = new mongoose.Schema({
     address: { type: mongoose.Schema.Types.ObjectId, ref: Address, required: true },
     foodDetails: [foodDetailSchema],
     totalAmount: { type: Number, required: true },
+    discount: { type: Number},
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: Coupon },
+    couponCode: { type: String },
     grossAmount: { type: Number, required: true },
     deliveryCharges: { type: Number, required: true },
     convenienceCharges: { type: Number, required: true },

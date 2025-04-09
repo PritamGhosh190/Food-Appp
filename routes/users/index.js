@@ -8,7 +8,8 @@ const {
   updateUser,
   removeUser,
   getUsers,
-  addAddress
+  addAddress,
+  coupon,
 } = require('../../Controllers/users/index')
 
 router.get('/', async (req, res) => {
@@ -40,5 +41,20 @@ router.post('/update/:userId', async (req, res) => {
 router.delete('/delete/:userId', async (req, res) => {
   await removeUser(req, res)
 })
+
+router.post('/coupon', coupon.createCoupon);
+router.get('/coupon', coupon.getAllCoupons);
+router.get('/coupon/:id', coupon.getCouponById);
+router.put('/coupon/:id', coupon.updateCoupon);
+router.delete('/coupon/:id', coupon.deleteCoupon);
+
+// extra: get coupon by code for applying checkCouponApplicability
+router.get('/code/:code', coupon.getCouponByCode);
+
+router.post('/coupon/checkEligibility', userAuth,async (req, res) => {
+  // console.log("bgcfgcxfgdcxdxg123");
+  await coupon.checkCouponApplicability(req, res)
+})
+
 
 module.exports = router

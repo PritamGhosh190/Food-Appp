@@ -12,17 +12,7 @@ exports.createFoodBill = async (req, res) => {
         // Create food bill
         const foodBill = new FoodBilling({
             userId:req.user.userId,
-            restaurantId,
-            address,
-            foodDetails,
-            totalAmount,
-            grossAmount,
-            deliveryCharges,
-            convenienceCharges,
-            otherCharges,
-            SGST,
-            CGST,
-            paymentStatus,
+           ...req.body
         });
         console.log("njdjncnkcjc",foodBill);
         
