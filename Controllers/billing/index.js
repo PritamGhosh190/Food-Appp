@@ -56,6 +56,7 @@ exports.getAllFoodBills = async (req, res) => {
         .populate('restaurantId')  // Populate the restaurantId field with the Restaurant document
         .populate('foodDetails.foodId')  // Populate the foodId field inside the foodDetails array
         .populate('address')  // Populate the foodId field inside the foodDetails array
+        .populate('coupon')
         .exec();
         const resFoodBills=foodBills.map((e)=>{
             if (!e.restaurantId.image.startsWith(process.env.IMAGEURL)) {
