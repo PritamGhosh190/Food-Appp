@@ -74,30 +74,40 @@ exports.getCouponByCode = async (req, res) => {
 
 exports.checkCouponApplicability = async (req, res) => {
     try {
-        // console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhhh", req.user);
+        // console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhhh1", req.user);
         
       const { couponId, orderAmount } = req.body;
       const userId=req.user.userId;
   
       if (!couponId || !userId || !orderAmount) {
+        console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhh2", req.user);
+
         return res.status(400).json({ message: 'couponId, userId and orderAmount are required' });
       }
   
       const coupon = await Coupon.findById(couponId);
   
       if (!coupon) {
+        console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhhh3", req.user);
+
         return res.status(404).json({ message: 'Coupon not found' });
       }
   
       if (!coupon.isActive) {
+        console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhh4", req.user);
+
         return res.status(400).json({ message: 'Coupon is not active' });
       }
   
       if (coupon.expiry && new Date() > coupon.expiry) {
+        console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhhh5", req.user);
+
         return res.status(400).json({ message: 'Coupon has expired' });
       }
   
       if (orderAmount < coupon.minOrderAmount) {
+        console.log("reqeste body", req.body,"hhhhhhhhhhhhhhhhh6", req.user);
+
         return res.status(400).json({ message: `Minimum order amount of ₹${coupon.minOrderAmount} required` });
       }
   
