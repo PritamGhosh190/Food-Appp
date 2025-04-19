@@ -198,6 +198,8 @@ const otpVerify = async (userRequest, res) => {
                 }
             })
             .catch(err => {
+                console.log("jjjj",err);
+                
                 // ✅ Catch any Twilio API errors, network errors, or invalid OTP
                 let statusCode = err.status || 500; // Default to 500 if no specific status
                 let errorMessage = err.message || "Failed to verify OTP";
