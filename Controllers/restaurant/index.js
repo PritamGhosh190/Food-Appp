@@ -135,7 +135,7 @@ exports.updaterestaurant = async (req, res) => {
       req.body.image = req.file.path; // Update with new image path
     }
 
-    const updatedrestaurant = await restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedrestaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
     if (!updatedrestaurant) {
       return res.status(404).json({ message: 'restaurant not found' });
