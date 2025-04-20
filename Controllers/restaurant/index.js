@@ -130,20 +130,72 @@ exports.getRestaurantAndFoods = async (req, res) => {
 
 exports.updaterestaurant = async (req, res) => {
   try {
-    // If an image is uploaded, we add it to the update
+    const restaurantId = req.params.id;
+
+    // Find the existing restaurant first
+    const existingRestaurant = await Restaurant.findById(restaurantId);
+    if (!existingRestaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+
+    // Update image if new file is uploaded
     if (req.file) {
-      req.body.image = req.file.path; // Update with new image path
+      req.body.image = req.file.path;
     }
 
-    const updatedrestaurant = await restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // If lat/lng are provided, no need to fetch from address
+    if (req.body.lat && req.body.lng) {
+      // continue as normal
+    } else if (req.body.address) {
+      // Get lat/lng from address
+      const geoApiUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        req.body.address
+      )}&key=${process.env.GOOGLEAPIKEY}`;
 
-    if (!updatedrestaurant) {
-      return res.status(404).json({ message: 'restaurant not found' });
+      const response = await superagent.get(geoApiUrl);
+
+      if (response.status === 200) {
+        const data = JSON.parse(response.text);
+        const location = data.results?.[0]?.geometry?.location;
+
+        if (location?.lat && location?.lng) {
+          req.body.lat = location.lat;
+          req.body.lng = location.lng;
+        } else {
+          return res.status(400).json({
+            message: 'Invalid address. Please provide a proper address.',
+          });
+        }
+      } else {
+        return res.status(500).json({ message: 'Failed to fetch geolocation.' });
+      }
     }
 
-    res.status(200).json(updatedrestaurant);
+    // Prepare update payload
+    const updateData = {
+      name: req.body.name || existingRestaurant.name,
+      image: req.body.image || existingRestaurant.image,
+      address: req.body.address || existingRestaurant.address,
+      rating: req.body.rating || existingRestaurant.rating,
+      category: req.body.category || existingRestaurant.category,
+      type: req.body.type || existingRestaurant.type,
+      cuisineType: req.body.cuisineType || existingRestaurant.cuisineType,
+      location: req.body.location || existingRestaurant.location,
+      lat: req.body.lat || existingRestaurant.lat,
+      lng: req.body.lng || existingRestaurant.lng,
+      assignUser: req.body.assignedUser || existingRestaurant.assignUser,
+    };
+
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+      restaurantId,
+      updateData,
+      { new: true }
+    );
+
+    res.status(200).json(updatedRestaurant);
   } catch (err) {
-    res.status(500).json({ message: 'Error updating restaurant', error: err });
+    console.error('Error updating restaurant:', err);
+    res.status(500).json({ message: 'Error updating restaurant', error: err.message });
   }
 };
 

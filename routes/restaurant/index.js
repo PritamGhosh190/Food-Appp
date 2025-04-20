@@ -72,7 +72,9 @@ const upload = multer({ storage: storage });
 router.post('/add',userAuth,checkRole(["admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
 
 // Route to update an existing restaurant (with image upload)
-// router.put('/:id', upload.single('image'), restaurantController.updaterestaurant);
+router.put('/update/:id',userAuth, upload.single('Restaurant_image'),async (req, res) => {
+    await restaurantController.updaterestaurant(req, res)
+  });
 
 // // Other routes remain unchanged
 router.get('/getAllResturents' ,userAuth,restaurantController.getAllRestaurants);

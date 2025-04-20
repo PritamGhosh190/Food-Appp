@@ -1,4 +1,5 @@
 const User = require('../../../models/User')
+const mongoose = require('mongoose');
 
 const updateUser = async (req, res) => {
   try {
@@ -15,6 +16,8 @@ const updateUser = async (req, res) => {
       user: user,
     })
   }catch (error) {
+    console.log("error",error);
+    
     return res.status(500).json({
       success: false,
       error: error.message,
