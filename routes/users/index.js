@@ -34,7 +34,7 @@ router.post('/get-users', async (req, res) => {
   await getUsers(req, res)
 })
 
-router.post('/update/:userId', async (req, res) => {
+router.put('/update/:userId', async (req, res) => {
   await updateUser(req, res)
 })
 
