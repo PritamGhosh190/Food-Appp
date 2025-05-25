@@ -10,39 +10,76 @@ const fs = require('fs');
 
 // console.log("imageurl=======>>>", process.env.IMAGEURL);
 
-// Create a new food detail
+// Create a new food detai
+
 exports.createFood = async (req, res) => {
   try {
-    // console.log("hiiiii",req.body);
-    // console.log('Request body:', req.body);
-    // console.log('Uploaded file:', req.file);
-    const { name, restaurant, price, rating, category, type, cuisineType } = req.body;
+    const {
+      name,
+      restaurant,
+      price,
+      rating,
+      description = '',
+      available = true,
+      stock = 0
+    } = req.body;
+
+    // Parse fields that might be strings or arrays
+    const parseArray = (field) => {
+      if (typeof field === 'string') {
+        try {
+          const parsed = JSON.parse(field);
+          return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+          return [field]; // fallback: single string to array
+        }
+      }
+      return Array.isArray(field) ? field : [field];
+    };
+
+    const category = parseArray(req.body.category);
+    const type = parseArray(req.body.type);
+    const cuisineType = parseArray(req.body.cuisineType);
+    const ingredients = parseArray(req.body.ingredients ?? []);
+
     if (!req.file) {
       return res.status(400).json({ message: 'No image uploaded' });
     }
-    const image = req.file.path; // Get image path from multer
 
+    const image = req.file.path;
 
     const newFood = new Food({
       name,
-      image,
       restaurant,
-      distance:0,
+      image,
       price,
       rating,
       category,
       type,
-      cuisineType
+      cuisineType,
+      description,
+      ingredients,
+      available,
+      stock
     });
 
     await newFood.save();
-    res.status(201).json({ message: 'Food detail created successfully', food: newFood });
-  } catch (error) {
-    console.log("errror",error);
 
-    res.status(400).json({ message: 'Error creating food detail', error: error.message });
+    return res.status(201).json({
+      message: 'Food detail created successfully',
+      food: newFood
+    });
+
+  } catch (error) {
+    console.error('Error creating food detail:', error);
+    return res.status(400).json({
+      message: 'Error creating food detail',
+      error: error.message
+    });
   }
 };
+
+
 
 // Get all food details with optional filters
 exports.getAllFoods = async (req, res) => {
@@ -123,11 +160,14 @@ exports.getFoodById = async (req, res) => {
 };
 
 // Update food details by ID
+
+
 exports.updateFood = async (req, res) => {
   try {
     const foodId = req.params.id;
-    // console.log('Request body:', req.body,"nbvggnvgggfghgh",req.params.id);
-    // console.log('Uploaded file:', req.file);
+
+    // console.log("req. body",req.body);
+    
     // Find the existing food document
     const existingFood = await Food.findById(foodId);
     if (!existingFood) {
@@ -146,8 +186,40 @@ exports.updateFood = async (req, res) => {
       req.body.image = req.file.path;
     }
 
+    // Parse category, type, cuisineType if they exist and are strings
+    if (req.body.category && typeof req.body.category === "string") {
+      try {
+        req.body.category = JSON.parse(req.body.category);
+      } catch {
+        // fallback if not JSON, maybe comma-separated string
+        req.body.category = req.body.category.split(",").map((v) => v.trim());
+      }
+    }
+
+    if (req.body.type && typeof req.body.type === "string") {
+      try {
+        req.body.type = JSON.parse(req.body.type);
+      } catch {
+        req.body.type = req.body.type.split(",").map((v) => v.trim());
+      }
+    }
+
+    if (req.body.cuisineType && typeof req.body.cuisineType === "string") {
+      try {
+        req.body.cuisineType = JSON.parse(req.body.cuisineType);
+      } catch {
+        req.body.cuisineType = req.body.cuisineType.split(",").map((v) => v.trim());
+      }
+    }
+
+    // If ingredients is sent as comma-separated string, convert to array
+    if (req.body.ingredients && typeof req.body.ingredients === "string") {
+      req.body.ingredients = req.body.ingredients.split(",").map((v) => v.trim());
+    }
+
     // Update the food document
     const updatedFood = await Food.findByIdAndUpdate(foodId, req.body, { new: true });
+
     if (!updatedFood) {
       return res.status(404).json({ message: 'Food not found' });
     }
