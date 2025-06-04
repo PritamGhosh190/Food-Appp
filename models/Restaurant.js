@@ -35,8 +35,28 @@ const restaurantSchema = new mongoose.Schema({
     ref: User,
     required: true,
     unique: true
+  },
+
+  // ✅ New field for GeoJSON coordinates
+  locationCoordinates: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number]  // [lng, lat]
+    }
   }
 });
+
+// ✅ Create a geospatial index
+restaurantSchema.index({ locationCoordinates: '2dsphere' });
+
+// Optional: Add other useful indexes for optimization
+restaurantSchema.index({ name: 1 });
+restaurantSchema.index({ location: 1 });
+restaurantSchema.index({ rating: -1 });
 
 const Restaurant = mongoose.model('Restaurant', restaurantSchema);
 module.exports = Restaurant;
