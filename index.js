@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const { connect } = require("mongoose");
 const { success, error } = require("consola");
 const path = require('path');
+// const Restaurant = require('./models/Restaurant');
 // const axios = require('axios');
 const multer = require('multer');
 const superagent = require('superagent');
@@ -73,15 +74,19 @@ const startApp = async () => {
       success({ message: `Server started on PORT ${PORT}`, badge: true })
     );
   } catch (err) {
-    console.log("error",err);
+    console.log("error", err);
     error({
       message: `Unable to connect with Database \n${err}`,
       badge: true,
     });
     startApp();
-  }};
+  }
+};
 
-  
+
+
+
+
 
 startApp();
 

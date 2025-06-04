@@ -2,33 +2,6 @@ const mongoose = require('mongoose');
 const Restaurant = require("./Restaurant");
 
 
-// Define the food schema
-// const foodSchema = new mongoose.Schema({
-//   name: { type: String, required: true },
-//   restaurant: { 
-//     type: mongoose.Schema.Types.ObjectId, 
-//     ref: Restaurant, // Reference to the Restaurant model
-//     required: true 
-//   },
-//   image: { type: String, required: true }, // URL of the image (you can use multer for file upload)
-//   distance: { type: Number},
-//   price: { type: Number, required: true },
-//   rating: { type: Number, required: true },
-//   category: { type: String, required: true },
-//   type: { type: String, required: true },
-//   cuisineType: { type: String, required: true }
-// });
-
-// Create the Food model from the schema
-
-
-
-
-
-
-
-// const mongoose = require('mongoose');
-// const Restaurant = require('./Restaurant');
 
 const foodSchema = new mongoose.Schema({
   name: {
@@ -119,17 +92,54 @@ const foodSchema = new mongoose.Schema({
 });
 
 
-// Optional: Only return not deleted items by default in queries
+
 foodSchema.pre(/^find/, function (next) {
   this.where({ $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }] });
   next();
 });
 
 
-// module.exports = mongoose.model('Food', foodSchema);
 
 const Food = mongoose.model('Food', foodSchema);
 
 // Export the model to be used in other parts of the application
 module.exports = Food;
+
+// Define the food schema
+// const foodSchema = new mongoose.Schema({
+//   name: { type: String, required: true },
+//   restaurant: { 
+//     type: mongoose.Schema.Types.ObjectId, 
+//     ref: Restaurant, // Reference to the Restaurant model
+//     required: true 
+//   },
+//   image: { type: String, required: true }, // URL of the image (you can use multer for file upload)
+//   distance: { type: Number},
+//   price: { type: Number, required: true },
+//   rating: { type: Number, required: true },
+//   category: { type: String, required: true },
+//   type: { type: String, required: true },
+//   cuisineType: { type: String, required: true }
+// });
+
+// Create the Food model from the schema
+
+
+
+
+
+
+
+// const mongoose = require('mongoose');
+// const Restaurant = require('./Restaurant');
+
+
+
+
+// Optional: Only return not deleted items by default in queries
+
+
+// module.exports = mongoose.model('Food', foodSchema);
+
+
 

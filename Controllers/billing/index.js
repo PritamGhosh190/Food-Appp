@@ -8,18 +8,20 @@ require('dotenv').config();
 // Create a new food bill
 exports.createFoodBill = async (req, res) => {
     try {
-        const { restaurantId, foodDetails,address, deliveryCharges, convenienceCharges, otherCharges, paymentStatus,totalAmount,grossAmount,CGST,SGST } = req.body;
+        const { restaurantId, foodDetails,address,type, convenienceCharges, otherCharges, paymentStatus,totalAmount,grossAmount,CGST,SGST } = req.body;
         // Create food bill
         const foodBill = new FoodBilling({
             userId:req.user.userId,
            ...req.body
         });
-        console.log("njdjncnkcjc",foodBill);
+        console.log("njdjncnkcjc",req.body);
         
         await foodBill.save();
         await Cart.deleteMany({ user: req.user.userId });
         res.status(201).json({ message: 'Food Bill created successfully', data: foodBill });
     } catch (error) {
+        console.log("gjjkkfdhfdh",error);
+        
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
@@ -58,24 +60,29 @@ exports.getAllFoodBills = async (req, res) => {
         .populate('address')  // Populate the foodId field inside the foodDetails array
         // .populate('coupon')
         .exec();
-        const resFoodBills=foodBills.map((e)=>{
-            if (!e.restaurantId.image.startsWith(process.env.IMAGEURL)) {
-                // Prepend the base URL to the restaurant image only if it's missing
-                e.restaurantId.image = process.env.IMAGEURL +  e.restaurantId.image.replace(/\\+/g, '/');
-              } else {
-                // If it already has the base URL, just fix the slashes
-                e.restaurantId.image =  e.restaurantId.image.replace(/\\+/g, '/');
-              }
-            e.createdAt="abc"+e.createdAt;
-            let abc= getFormattedDateTimeWithAMPM(e.createdAt)
-            console.log(abc);
-            e.formattedCreatedAt = abc;
-            return e
-        })
+
+        // console.log("err",foodBills);
+
+        // const resFoodBills=foodBills.map((e)=>{
+        //     if (!e.restaurantId.image.startsWith(process.env.IMAGEURL)) {
+        //         // Prepend the base URL to the restaurant image only if it's missing
+        //         e.restaurantId.image = process.env.IMAGEURL +  e.restaurantId.image.replace(/\\+/g, '/');
+        //       } else {
+        //         // If it already has the base URL, just fix the slashes
+        //         e.restaurantId.image =  e.restaurantId.image.replace(/\\+/g, '/');
+        //       }
+        //     e.createdAt="abc"+e.createdAt;
+        //     let abc= getFormattedDateTimeWithAMPM(e.createdAt)
+        //     console.log(abc);
+        //     e.formattedCreatedAt = abc;
+        //     return e
+        // })
       
-      console.log(resFoodBills);
+    //   console.log(resFoodBills);
         res.status(200).json({ data: foodBills });
     } catch (error) {
+        console.log("err",error);
+        
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };

@@ -2,7 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance ,foodDetails} = require("../../Controllers/food");
+const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance ,foodDetails,duplicateFoodToAllRestaurants} = require("../../Controllers/food");
 const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth');
 const { log } = require('async');
 const fs = require('fs');
@@ -24,6 +24,7 @@ const upload = multer({ storage: storage });
 
 // Create a new food entry
 router.post('/add',checkRole(["admin","seller"]), upload.single('image'), createFood);
+// router.get('/addduplicate',duplicateFoodToAllRestaurants );
 // Update food details by ID
 router.put('/update/:id',checkRole(["admin","seller"]), upload.single('image'), updateFood);
 

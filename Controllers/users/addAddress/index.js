@@ -19,9 +19,9 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
   };
 
 
-const addAddress = async (req, res) => {
+const addAddress1 = async (req, res) => {
     try {
-        // console.log("hjgvsgvgvgx============>",req.user);
+        console.log("hjgvsgvgvgx============>",req.body);
 
         const role = req.user.role
 
@@ -123,5 +123,99 @@ const addAddress = async (req, res) => {
         })
     }
 }
+
+const addAddress = async (req, res) => {
+  try {
+
+    const { mobileNumber, name, address, restaurant, type } = req.body;
+    const role = req.user.role;
+    const userId = req.user.userId;
+
+    if (!type || !['delivery', 'dineIn', 'takeaway'].includes(type)) {
+      return res.status(400).json({
+        message: 'Invalid or missing address type. Must be one of: delivery, dineIn, takeaway',
+        success: false,
+      });
+    }
+
+    let lat = req.body.lat;
+    let lng = req.body.lng;
+
+    // Handle delivery case with coordinates/address resolution
+    if (type === 'delivery') {
+      if (!lat || !lng) {
+        if (!address) {
+          return res.status(400).json({
+            message: 'Address or latitude/longitude required for delivery type',
+            success: false
+          });
+        }
+
+        const geoURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.GOOGLEAPIKEY}`;
+        const response = await superagent.get(geoURL);
+        const data = JSON.parse(response.text);
+
+        if (response.status === 200 && data.results?.[0]?.geometry?.location) {
+          lat = data.results[0].geometry.location.lat;
+          lng = data.results[0].geometry.location.lng;
+        } else {
+          return res.status(422).json({
+            message: 'Unable to resolve address to coordinates',
+            success: false
+          });
+        }
+      }
+    } else {
+      // For dineIn/takeaway, location fields must be null
+      lat = null;
+      lng = null;
+    }
+
+    const newAddress = new UserAddress({
+      mobilenum: mobileNumber,
+      userId,
+      name,
+      address: type === 'delivery' ? address : null,
+      lat,
+      lng,
+      role,
+      type,
+    });
+
+    // Calculate distance only for delivery
+    let distance = null;
+    if (type === 'delivery') {
+      const restaurantData = await Restaurant.findById(restaurant);
+      if (!restaurantData) {
+        return res.status(404).json({ message: 'Restaurant not found', success: false });
+      }
+
+      const restaurantLat = restaurantData.lat;
+      const restaurantLng = restaurantData.lng;
+
+      // Haversine formula to calculate distance
+      distance = haversineDistance(lat, lng, restaurantLat, restaurantLng).toFixed(2);
+    }
+
+    await newAddress.save();
+    console.log("Received address payload:", req.body,"responses", newAddress,distance);
+
+    return res.status(201).json({
+      message: 'Address added successfully',
+      success: true,
+      newAddress,
+      distance: distance || undefined,
+    });
+
+  } catch (err) {
+    console.error('Address creation error:', err);
+    return res.status(500).json({
+      message: 'Unable to add address',
+      error: err.message,
+      success: false
+    });
+  }
+};
+
 
 module.exports = addAddress

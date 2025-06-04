@@ -1,25 +1,28 @@
 const mongoose = require('mongoose');
 const User = require("./User");
 
-
-// Create the Address Schema
 const addressSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the User model
+    ref: 'User',
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['delivery', 'dineIn', 'takeaway'],
     required: true
   },
   address: {
     type: String,
-    required: true
+    default: null
   },
   lat: {
     type: Number,
-    required: true
+    default: null
   },
   lng: {
     type: Number,
-    required: true
+    default: null
   },
   name: {
     type: String,
@@ -27,24 +30,35 @@ const addressSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'user',
     enum: ["seller", "admin", "user"],
+    default: 'user'
   },
   mobilenum: {
     type: String,
     required: true,
     validate: {
       validator: function(v) {
-        return /\d{10}/.test(v); // Ensure the mobile number is 10 digits
+        return /^\d{10}$/.test(v); // 10-digit number
       },
       message: props => `${props.value} is not a valid mobile number!`
     }
   }
 }, {
-  timestamps: true // To automatically create createdAt and updatedAt fields
+  timestamps: true
 });
 
-// Create the Address model based on the schema
-const Address = mongoose.model('Address', addressSchema);
+// ✅ Conditional validation using pre-save hook
+addressSchema.pre('validate', function (next) {
+  if (this.type === 'delivery') {
+    if (!this.address) {
+      return next(new Error('Address is required for delivery type.'));
+    }
+    if (this.lat == null || this.lng == null) {
+      return next(new Error('Latitude and Longitude are required for delivery type.'));
+    }
+  }
+  next();
+});
 
+const Address = mongoose.model('Address', addressSchema);
 module.exports = Address;
