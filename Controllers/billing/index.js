@@ -1,6 +1,7 @@
 const User = require("../../models/User");
 const FoodBilling = require("../../models/Billing");
 const Cart = require("../../models/Cart");
+const { log } = require("async");
 // const Restaurant = require('../models/restaurant');
 require('dotenv').config();
 
@@ -14,13 +15,13 @@ exports.createFoodBill = async (req, res) => {
             userId:req.user.userId,
            ...req.body
         });
-        console.log("njdjncnkcjc",req.body);
+        // console.log("njdjncnkcjc",req.body);
         
         await foodBill.save();
         await Cart.deleteMany({ user: req.user.userId });
         res.status(201).json({ message: 'Food Bill created successfully', data: foodBill });
     } catch (error) {
-        console.log("gjjkkfdhfdh",error);
+        // console.log("gjjkkfdhfdh",error);
         
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -51,6 +52,8 @@ function getFormattedDateTimeWithAMPM(dateString) {
 
 // Get all food bills
 exports.getAllFoodBills = async (req, res) => {
+    // console.log("vjkddjvjkkjkjkjkj");
+    
     const userId=req.user.userId;
     try {
         const foodBills = await FoodBilling.find({ userId })
@@ -78,7 +81,7 @@ exports.getAllFoodBills = async (req, res) => {
         //     return e
         // })
       
-    //   console.log(resFoodBills);
+    //   console.log("hiii hello",foodBills);
         res.status(200).json({ data: foodBills });
     } catch (error) {
         console.log("err",error);

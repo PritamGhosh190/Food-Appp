@@ -77,7 +77,7 @@ router.put('/update/:id',userAuth, upload.single('Restaurant_image'),async (req,
   });
 
 // // Other routes remain unchanged
-router.get('/' ,userAuth,restaurantController.getAllRestaurants);
+router.get('/getAllRestaurants' ,userAuth,restaurantController.getAllRestaurants);
 router.get('/getRestaurantAndFoods',userAuth, restaurantController.getRestaurantAndFoods);
 // router.get('/:id', restaurantController.getrestaurantById);
 // router.delete('/:id', restaurantController.deleterestaurant);

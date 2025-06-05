@@ -99,7 +99,7 @@ exports.getAllFoods = async (req, res) => {
       limit = 10
     } = req.query;
 
-    console.log("Query params:", req.query);
+    // console.log("Query params:", req.query);
 
     const radiusInMeters = parseFloat(distance) * 1000;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -130,18 +130,18 @@ exports.getAllFoods = async (req, res) => {
       };
     }
 
-   if (name) {
-  const rawName = Array.isArray(name) ? name[0] : name;
-  const safeName = typeof rawName === 'string' ? rawName : String(rawName);
+    if (name) {
+      const rawName = Array.isArray(name) ? name[0] : name;
+      const safeName = typeof rawName === 'string' ? rawName : String(rawName);
 
-  // Optional: Escape special regex characters
-  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Optional: Escape special regex characters
+      const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  foodMatch["foods.name"] = {
-    $regex: escapeRegex(safeName),
-    $options: "i"
-  };
-}
+      foodMatch["foods.name"] = {
+        $regex: escapeRegex(safeName),
+        $options: "i"
+      };
+    }
 
 
 
@@ -273,7 +273,7 @@ exports.filterFood = async (req, res) => {
     if (cuisineType) filter.cuisineType = new RegExp(cuisineType, 'i');
     if (category) filter.category = new RegExp(category, 'i');
 
-    console.log("vfcfc", req.body, "fdgdffffty", filter);
+    // console.log("vfcfc", req.body, "fdgdffffty", filter);
     // if (restaurantId){
     //   const foods = await Food.find({restaurant:restaurantId}).populate('restaurant');
     // }
@@ -440,24 +440,24 @@ exports.deleteFood = async (req, res) => {
 
 
 exports.addCart = async (req, res) => {
-  
+
   // Validate the request body
   // const { error } = cartValidationSchema.validate(req.body);
   // if (error) {
-    //   return res.status(400).send(error.details[0].message);
-    // }
-    try {
-      
-      const { food, quantity ,type} = req.body;
-      const user = req.user.userId;
-      console.log("hjdhhdshjds",req.body);
+  //   return res.status(400).send(error.details[0].message);
+  // }
+  try {
+
+    const { food, quantity, type } = req.body;
+    const user = req.user.userId;
+    // console.log("hjdhhdshjds", req.body);
 
     // Check if the item already exists in the user's cart
     if (quantity <= 0) {
       res.status(206).json({ message: "You can't add 0 quantity in the cart item" });
     }
     else {
-      const existingCartItem = await Cart.findOne({ user, food,type });
+      const existingCartItem = await Cart.findOne({ user, food, type });
 
       if (existingCartItem) {
         // If the item exists, update the quantity
@@ -475,7 +475,7 @@ exports.addCart = async (req, res) => {
             }
           });
 
-          // console.log("ngbjyvjctgcht",resultFood);
+        // console.log("ngbjyvjctgcht",resultFood);
         const resultFood = cartDetils.map(cart => {
           cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
           if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
@@ -545,8 +545,8 @@ exports.getCart = async (req, res) => {
         }
       });
 
-      // console.log("the cart items is ", cartDetils);
-      
+    // console.log("the cart items is ", cartDetils);
+
     const resultFood = cartDetils.map(cart => {
       if (cart.food) {
         if (cart.food.image) {
@@ -565,6 +565,8 @@ exports.getCart = async (req, res) => {
       }
       return cart;
     });
+    // console.log("bxdjhdhjf11111111111111", resultFood[0].food.restaurant);
+
 
     return res.status(200).json({ message: "Fetched cart Details", result: resultFood });
   }
@@ -669,13 +671,13 @@ exports.calculateDistance = async () => {
     const userLng = user.lng;
     const restaurantLat = restaurant.lat;
     const restaurantLng = restaurant.lng;
-    console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
+    // console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
 
 
     // Calculate distance between user and restaurant using Haversine formula
     const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng);
 
-    console.log(`The distance between the user and the restaurant is: ${distance.toFixed(2)} kilometers.`);
+    // console.log(`The distance between the user and the restaurant is: ${distance.toFixed(2)} kilometers.`);
   } catch (error) {
     console.error("Error occurred:", error);
   }
@@ -720,9 +722,9 @@ exports.duplicateFoodToAllRestaurants = async () => {
     // STEP 4: Bulk insert all cloned foods
     if (bulkInsert.length > 0) {
       await Food.insertMany(bulkInsert);
-      console.log(`✅ Successfully copied ${foodItems.length} food items to ${restaurants.length} restaurants.`);
+      // console.log(`✅ Successfully copied ${foodItems.length} food items to ${restaurants.length} restaurants.`);
     } else {
-      console.log('⚠️ No restaurants found to copy food to.');
+      // console.log('⚠️ No restaurants found to copy food to.');
     }
 
   } catch (error) {
