@@ -67,7 +67,7 @@ exports.createrestaurant = async (req, res) => {
 
       if (response.status === 200) {
         const data = JSON.parse(response.text);
-        console.log("dbsddsdhj", data);
+        // console.log("dbsddsdhj", data);
 
         const location = data.results?.[0]?.geometry?.location;
 
@@ -238,7 +238,7 @@ exports.updaterestaurant = async (req, res) => {
 
 exports.getAllRestaurants1 = async (req, res) => {
   try {
-    console.log(req.user, "User Details");
+    // console.log(req.user, "User Details");
 
     // Define the query condition based on user type
     let query = {};
@@ -259,7 +259,7 @@ exports.getAllRestaurants1 = async (req, res) => {
       return restaurant;
     });
 
-    console.log("hxhsjhdd", restaurantsWithImages);
+    // console.log("hxhsjhdd", restaurantsWithImages);
 
     res.status(200).json(restaurantsWithImages);
   } catch (err) {
@@ -273,7 +273,7 @@ exports.getAllRestaurants = async (req, res) => {
     const role = req.user.role;
     const userId = req.user.userId;
     const baseUrl = process.env.IMAGEURL;
-    const radius = 10;
+    const radius = 100;
     let query = {};
 
     if (role === 'seller') {
@@ -283,7 +283,7 @@ exports.getAllRestaurants = async (req, res) => {
     } else if (role === 'user') {
       // User: Filter by geolocation within a given radius
       const { lat, lng } = req.query;
-      console.log("ddsssssssssss", req.query);
+      // console.log("ddsssssssssss", req.query);
 
       if (!lat || !lng || !radius) {
         return res.status(400).json({
