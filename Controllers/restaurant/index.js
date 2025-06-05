@@ -118,13 +118,13 @@ exports.createrestaurant = async (req, res) => {
 };
 
 exports.getRestaurantAndFoods = async (req, res) => {
-  
+
   try {
     // If an image is uploaded, we add it to the update
-    const restaurant = await Restaurant.findOne({ assignUser:new mongoose.Types.ObjectId(req.user.userId)});
+    const restaurant = await Restaurant.findOne({ assignUser: new mongoose.Types.ObjectId(req.user.userId) });
     restaurant.image = process.env.IMAGEURL + restaurant.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
     if (restaurant) {
-      const foods = await Food.find({ restaurant: new mongoose.Types.ObjectId(restaurant.id )})
+      const foods = await Food.find({ restaurant: new mongoose.Types.ObjectId(restaurant.id) })
       // console.log("gghjjgjgjh",foods);
       if (foods) {
         const resultFood = foods.map(food => {
@@ -236,9 +236,9 @@ exports.updaterestaurant = async (req, res) => {
   }
 };
 
-exports.getAllRestaurants = async (req, res) => {
+exports.getAllRestaurants1 = async (req, res) => {
   try {
-    // console.log(req.user, "User Details");
+    console.log(req.user, "User Details");
 
     // Define the query condition based on user type
     let query = {};
@@ -259,9 +259,70 @@ exports.getAllRestaurants = async (req, res) => {
       return restaurant;
     });
 
+    console.log("hxhsjhdd", restaurantsWithImages);
+
     res.status(200).json(restaurantsWithImages);
   } catch (err) {
     console.log("Error fetching restaurants:", err);
     res.status(500).json({ message: 'Error fetching restaurants', error: err.message });
+  }
+};
+
+exports.getAllRestaurants = async (req, res) => {
+  try {
+    const role = req.user.role;
+    const userId = req.user.userId;
+    const baseUrl = process.env.IMAGEURL;
+    const radius = 10;
+    let query = {};
+
+    if (role === 'seller') {
+      // Seller: Only assigned restaurant
+      query.assignUser = new mongoose.Types.ObjectId(userId);
+
+    } else if (role === 'user') {
+      // User: Filter by geolocation within a given radius
+      const { lat, lng } = req.query;
+      console.log("ddsssssssssss", req.query);
+
+      if (!lat || !lng || !radius) {
+        return res.status(400).json({
+          message: 'Latitude, Longitude, and Radius are required for users.',
+          status: false
+        });
+      }
+
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+      const distanceInMeters = parseFloat(radius) * 1000; // convert km to meters
+
+      query.locationCoordinates = {
+        $nearSphere: {
+          $geometry: {
+            type: "Point",
+            coordinates: [userLng, userLat]
+          },
+          $maxDistance: distanceInMeters
+        }
+      };
+    }
+
+    // Fetch from DB
+    const restaurants = await Restaurant.find(query).populate('assignUser');
+
+    // Format image URLs
+    const formatted = restaurants.map(r => {
+      r.image = baseUrl + r.image.replace(/\\+/g, '/');
+      return r;
+    });
+
+    return res.status(200).json(formatted);
+
+  } catch (err) {
+    console.error("Error fetching restaurants:", err);
+    return res.status(500).json({
+      message: 'Error fetching restaurants',
+      error: err.message
+    });
   }
 };
