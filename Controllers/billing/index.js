@@ -9,83 +9,156 @@ require('dotenv').config();
 // Create a new food bill
 exports.createFoodBill = async (req, res) => {
     try {
-        const { restaurantId, foodDetails,address,type, convenienceCharges, otherCharges, paymentStatus,totalAmount,grossAmount,CGST,SGST } = req.body;
+        const { restaurantId, foodDetails, address, type, convenienceCharges, otherCharges, paymentStatus, totalAmount, grossAmount, CGST, SGST } = req.body;
         // Create food bill
         const foodBill = new FoodBilling({
-            userId:req.user.userId,
-           ...req.body
+            userId: req.user.userId,
+            ...req.body
         });
         // console.log("njdjncnkcjc",req.body);
-        
+
         await foodBill.save();
         await Cart.deleteMany({ user: req.user.userId });
         res.status(201).json({ message: 'Food Bill created successfully', data: foodBill });
     } catch (error) {
         // console.log("gjjkkfdhfdh",error);
-        
+
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 function getFormattedDateTimeWithAMPM(dateString) {
     const date = new Date(dateString); // Create a Date object
-    
+
     // Format the date
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');  // Months are 0-based, so add 1
     const day = date.getDate().toString().padStart(2, '0');
-    
+
     // Get the hours, and format for 12-hour clock
     let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
-    
+
     // Determine AM or PM
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    
+
     // Convert to 12-hour format
     hours = hours % 12;
     hours = hours ? hours : 12; // 0 hour should be 12 (12:00 AM)
-    
+
     // Combine both parts into a formatted string
     return `${year}-${month}-${day} ${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
-  }
+}
 
 // Get all food bills
+//  = async (req, res) => {
+//     // console.log("vjkddjvjkkjkjkjkj");
+
+//     const userId=req.user.userId;
+//     try {
+//         const foodBills = await FoodBilling.find({ userId })
+//         .populate('userId')  // Populate the userId field with the User document
+//         .populate('restaurantId')  // Populate the restaurantId field with the Restaurant document
+//         .populate('foodDetails.foodId')  // Populate the foodId field inside the foodDetails array
+//         .populate('address')  // Populate the foodId field inside the foodDetails array
+//         // .populate('coupon')
+//         .exec();
+
+//         console.log("err",foodBills);
+
+//         const addUrl=process.env.IMAGEURL;
+
+//         // const resFoodBills=foodBills.map((e)=>{
+//         //     if (!e.restaurantId.image.startsWith(process.env.IMAGEURL)) {
+//         //         // Prepend the base URL to the restaurant image only if it's missing
+//         //         e.restaurantId.image = process.env.IMAGEURL +  e.restaurantId.image.replace(/\\+/g, '/');
+//         //       } else {
+//         //         // If it already has the base URL, just fix the slashes
+//         //         e.restaurantId.image =  e.restaurantId.image.replace(/\\+/g, '/');
+//         //       }
+//         //     e.createdAt="abc"+e.createdAt;
+//         //     let abc= getFormattedDateTimeWithAMPM(e.createdAt)
+//         //     console.log(abc);
+//         //     e.formattedCreatedAt = abc;
+//         //     return e
+//         // })
+
+//     //   console.log("hiii hello",foodBills);
+//         res.status(200).json({ status :true ,data: foodBills });
+//     } catch (error) {
+//         console.log("err",error);
+
+//         res.status(500).json({ message: 'Server Error', error: error.message });
+//     }
+// };
+
 exports.getAllFoodBills = async (req, res) => {
-    // console.log("vjkddjvjkkjkjkjkj");
-    
-    const userId=req.user.userId;
     try {
+        const userId = req.user.userId; // assuming req.user is available
+        const baseUrl = process.env.IMAGEURL || '';
+
         const foodBills = await FoodBilling.find({ userId })
-        .populate('userId')  // Populate the userId field with the User document
-        .populate('restaurantId')  // Populate the restaurantId field with the Restaurant document
-        .populate('foodDetails.foodId')  // Populate the foodId field inside the foodDetails array
-        .populate('address')  // Populate the foodId field inside the foodDetails array
-        // .populate('coupon')
-        .exec();
+            .populate('userId')
+            .populate('restaurantId')
+            .populate('foodDetails.foodId')
+            .populate('address')
+            .sort({ createdAt: -1 }) // sort by createdAt descending
+            .exec();
 
-        // console.log("err",foodBills);
+        const transformedBills = foodBills.map(bill => {
+            const billObj = bill.toObject();
 
-        // const resFoodBills=foodBills.map((e)=>{
-        //     if (!e.restaurantId.image.startsWith(process.env.IMAGEURL)) {
-        //         // Prepend the base URL to the restaurant image only if it's missing
-        //         e.restaurantId.image = process.env.IMAGEURL +  e.restaurantId.image.replace(/\\+/g, '/');
-        //       } else {
-        //         // If it already has the base URL, just fix the slashes
-        //         e.restaurantId.image =  e.restaurantId.image.replace(/\\+/g, '/');
-        //       }
-        //     e.createdAt="abc"+e.createdAt;
-        //     let abc= getFormattedDateTimeWithAMPM(e.createdAt)
-        //     console.log(abc);
-        //     e.formattedCreatedAt = abc;
-        //     return e
-        // })
-      
-    //   console.log("hiii hello",foodBills);
-        res.status(200).json({ data: foodBills });
-    } catch (error) {
-        console.log("err",error);
+            return {
+                ...billObj,
+                restaurantId: bill.restaurantId
+                    ? {
+                        ...bill.restaurantId.toObject(),
+                        image: bill.restaurantId.image
+                            ? baseUrl + bill.restaurantId.image
+                            : null,
+                    }
+                    : null,
+                userId: bill.userId ? bill.userId.toObject() : null,
+                address: bill.address ? bill.address.toObject() : null,
+                foodDetails: Array.isArray(bill.foodDetails)
+                    ? bill.foodDetails.map(item => {
+                        const foodObj = item.toObject();
+                        return {
+                            ...foodObj,
+                            foodId: foodObj.foodId
+                                ? {
+                                    ...foodObj.foodId,
+                                    image: foodObj.foodId.image
+                                        ? baseUrl + foodObj.foodId.image
+                                        : null,
+                                }
+                                : null,
+                        };
+                    })
+                    : [],
+            };
+        });
+
+        // Log last transformed bill safely
+        if (transformedBills.length > 0) {
+            // console.log(
+            //     "Last Transformed Bill:",
+            //     JSON.stringify(transformedBills[transformedBills.length - 1], null, 2)
+            // );
+        }
+
+        // console.log("ghhgghjhjghjjh",transformedBills);
         
-        res.status(500).json({ message: 'Server Error', error: error.message });
+        return res.status(200).json({
+            success: true,
+            data: transformedBills,
+        });
+    } catch (error) {
+        console.error("Error fetching food bills: ", error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching food bills",
+            error: error.message,
+        });
     }
 };

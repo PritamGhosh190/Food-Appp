@@ -94,7 +94,7 @@ exports.getAllFoods = async (req, res) => {
       restaurantId,
       lat,
       lng,
-      distance = 500,
+      distance = 10,
       page = 1,
       limit = 10
     } = req.query;
@@ -107,7 +107,7 @@ exports.getAllFoods = async (req, res) => {
 
     const restaurantMatch = {};
     if (restaurantId) {
-      restaurantMatch._id = mongoose.Types.ObjectId(restaurantId);
+      restaurantMatch._id = new mongoose.Types.ObjectId(restaurantId);
     }
 
     const foodMatch = {};
