@@ -94,7 +94,7 @@ exports.getAllFoods = async (req, res) => {
       restaurantId,
       lat,
       lng,
-      distance = 10,
+      distance = 100,
       page = 1,
       limit = 10
     } = req.query;
