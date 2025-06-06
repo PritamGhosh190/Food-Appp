@@ -198,7 +198,7 @@ const addAddress = async (req, res) => {
     }
 
     await newAddress.save();
-    console.log("Received address payload:", req.body,"responses", newAddress,distance);
+    // console.log("Received address payload:", req.body,"responses", newAddress,distance);
 
     return res.status(201).json({
       message: 'Address added successfully',

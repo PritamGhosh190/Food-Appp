@@ -273,7 +273,7 @@ exports.getAllRestaurants = async (req, res) => {
     const role = req.user.role;
     const userId = req.user.userId;
     const baseUrl = process.env.IMAGEURL;
-    const radius = 100;
+    const radius = 10;
     let query = {};
 
     if (role === 'seller') {
@@ -316,6 +316,8 @@ exports.getAllRestaurants = async (req, res) => {
       return r;
     });
 
+    console.log("jbhhjbhjvvvvvvvvvvvvv",formatted);
+    
     return res.status(200).json(formatted);
 
   } catch (err) {
