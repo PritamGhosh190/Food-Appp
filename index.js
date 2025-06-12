@@ -23,8 +23,8 @@ const app = exp();
 app.use(morgan("dev"));
 
 app.use(cors());
-// app.use(cors({ origin: "*", credentials: true }));
-// app.use(cors({ origin: "https://foodapp.sensegeofence.com" }));
+app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({ origin: "https://foodapp.sensegeofence.com" }));
 app.use(exp.json());
 app.use(
   exp.urlencoded({
