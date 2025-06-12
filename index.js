@@ -11,6 +11,8 @@ const path = require('path');
 const multer = require('multer');
 const superagent = require('superagent');
 require('dotenv').config();
+const mysql = require('mysql2');
+
 
 // const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
 const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
@@ -82,6 +84,63 @@ const startApp = async () => {
     startApp();
   }
 };
+
+// const connection = mysql.createConnection({
+//   host: '103.211.202.239',               // e.g., mysql.yourdomain.com
+//   user: 'sensegeofence_NODETEST',
+//   password: 'grey@Matter#1234',
+//   database: 'sensegeofence_Test'
+// });
+
+// // Connect and perform DB operations
+// connection.connect((err) => {
+//   if (err) {
+//     console.error('❌ Connection error:', err.message);
+//     return;
+//   }
+//   console.log('✅ Connected to MySQL Database');
+
+//   // Step 1: Create a test table if it doesn't exist
+//   const createTableQuery = `
+//     CREATE TABLE IF NOT EXISTS test_users (
+//       id INT AUTO_INCREMENT PRIMARY KEY,
+//       name VARCHAR(100),
+//       email VARCHAR(100)
+//     )
+//   `;
+
+//   connection.query(createTableQuery, (err) => {
+//     if (err) {
+//       console.error('❌ Table creation failed:', err.message);
+//       return;
+//     }
+//     console.log('✅ Table ready');
+
+//     // Step 2: Insert sample data
+//     const insertQuery = 'INSERT INTO test_users (name, email) VALUES (?, ?)';
+//     const values = ['John Doe', 'john@example.com'];
+
+//     connection.query(insertQuery, values, (err, result) => {
+//       if (err) {
+//         console.error('❌ Insert failed:', err.message);
+//         return;
+//       }
+//       console.log(`✅ Inserted row with ID ${result.insertId}`);
+
+//       // Step 3: Fetch and print all rows
+//       connection.query('SELECT * FROM test_users', (err, rows) => {
+//         if (err) {
+//           console.error('❌ Fetch failed:', err.message);
+//           return;
+//         }
+//         console.log('📦 Data from test_users:', rows);
+
+//         // Close the connection
+//         connection.end();
+//       });
+//     });
+//   });
+// });
 
 
 

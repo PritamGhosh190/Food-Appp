@@ -8,7 +8,7 @@ const foodSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    lowercase: true
+    // lowercase: true
   },
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
@@ -82,6 +82,10 @@ const foodSchema = new mongoose.Schema({
   stock: {
     type: Number,
     default: 0
+  },
+  isTrainding:{
+    type:Boolean,
+    default:false
   },
   isDeleted: {
     type: Boolean,

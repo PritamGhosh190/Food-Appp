@@ -23,7 +23,8 @@ exports.createFood = async (req, res) => {
       rating,
       description = '',
       available = true,
-      stock = 0
+      stock = 0,
+      isTrainding
     } = req.body;
 
     // Parse fields that might be strings or arrays
@@ -62,7 +63,8 @@ exports.createFood = async (req, res) => {
       description,
       ingredients,
       available,
-      stock
+      stock,
+      isTrainding
     });
 
     await newFood.save();
@@ -327,7 +329,7 @@ exports.filterFood = async (req, res) => {
 exports.updateFood = async (req, res) => {
   try {
     const foodId = req.params.id;
-    // console.log("req. body",req.body);
+    console.log("req. body",req.body);
 
     // Find the existing food document
     const existingFood = await Food.findById(foodId);
