@@ -92,11 +92,12 @@ exports.getAllFoods = async (req, res) => {
       name,
       cuisineType,
       category,
+      ingredients,
       type,
       restaurantId,
       lat,
       lng,
-      distance = 500,
+      distance = 50,
       page = 1,
       limit = 10
     } = req.query;
@@ -131,6 +132,11 @@ exports.getAllFoods = async (req, res) => {
         $in: Array.isArray(type) ? type : [type]
       };
     }
+    if (ingredients) {
+      foodMatch["foods.ingredients"] = {
+        $in: Array.isArray(ingredients) ? ingredients : [ingredients]
+      };
+    }
 
     if (name) {
       const rawName = Array.isArray(name) ? name[0] : name;
@@ -158,7 +164,7 @@ exports.getAllFoods = async (req, res) => {
             coordinates: [parseFloat(lng), parseFloat(lat)]
           },
           distanceField: "distance",
-          // maxDistance: radiusInMeters,
+          maxDistance: radiusInMeters,
           spherical: true,
           query: restaurantMatch
         }
@@ -199,6 +205,31 @@ exports.getAllFoods = async (req, res) => {
     pipeline.push({ $limit: parsedLimit });
 
     const results = await Restaurant.aggregate(pipeline);
+    const trendingFoods = await Food.aggregate([
+      {
+        $match: {
+          isTrainding: true,
+          isDeleted: false
+        }
+      },
+      {
+        $sort: { createdAt: -1 } // Or sort by rating, popularity, etc.
+      },
+      {
+        $group: {
+          _id: "$name", // Group by food name to ensure uniqueness
+          doc: { $first: "$$ROOT" } // Keep the first full document for each name
+        }
+      },
+      {
+        $replaceRoot: { newRoot: "$doc" } // Flatten the document
+      },
+      {
+        $limit: 10
+      }
+    ]);
+    // console.log("trending foods ",trendingFoods);
+    
 
     const processed = results.map(item => {
       if (item.food.image) {
@@ -206,6 +237,14 @@ exports.getAllFoods = async (req, res) => {
       }
       return item;
     });
+
+    const trendingFood = trendingFoods.map(item => {
+      if (item.image) {
+        item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
+      }
+      return item;
+    });
+
 
     const countPipeline = JSON.parse(JSON.stringify(pipeline));
     countPipeline.splice(-2); // remove skip and limit
@@ -219,7 +258,8 @@ exports.getAllFoods = async (req, res) => {
       page: parseInt(page),
       limit: parsedLimit,
       count: processed.length,
-      total: totalFoods
+      total: totalFoods,
+      trendingFood
     });
   } catch (error) {
     console.error(error);

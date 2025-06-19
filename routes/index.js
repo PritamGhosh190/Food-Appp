@@ -26,6 +26,9 @@ router.use('/billing',userAuth,require('./billing')
 router.use('/restaurantAuth',userAuth1,require('./restaurant')
 )
 
+router.use('/banner',userAuth,require('./banner')
+)
+
 // Authentication Router Middleware
 router.use('/auth', require('./auth'))
 
