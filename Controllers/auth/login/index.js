@@ -2,8 +2,7 @@
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
-require('dotenv').config();  // Assuming the model is named 'Food.js'
-
+require("dotenv").config(); // Assuming the model is named 'Food.js'
 
 // Imports
 const { SECRET, TOKEN_EXPIRATION } = require("../../../config");
@@ -30,21 +29,16 @@ const MSG = {
  * @param {string} role - The role of the user {admin, user, superadmin}.
  * @return {Object} contains 3 attributes {error/success message : string, success : boolean, reason: string}.
  */
-const login = async (userRequest,role,res) => {
+const login = async (userRequest, role, res) => {
   // console.log("reqdata111",userRequest);
   try {
-    
     const loginRequest = await loginSchema.validateAsync(userRequest);
-    let { mobileNumber, password,role } = userRequest;
+    let { mobileNumber, password, role } = userRequest;
 
     // First Check if the username or email is in the database
 
-    
-    
-    let user = await User.findOne({mobileNumber});
+    let user = await User.findOne({ mobileNumber });
     // console.log("users",user);
-    
-    
 
     if (!user) {
       return res.status(404).json({
@@ -64,15 +58,12 @@ const login = async (userRequest,role,res) => {
     //   });
     // }
 
-    
-    
     // That means user is existing and trying to signin from the right portal
     // Now check for the password
     let isMatch = await bcrypt.compare(password, user.password);
     // console.log("is matched",isMatch);
-    
-    if (isMatch) {
 
+    if (isMatch) {
       // Sign in the token and issue it to the user
       let token = jwt.sign(
         {
@@ -82,17 +73,17 @@ const login = async (userRequest,role,res) => {
           email: user.email,
         },
         process.env.SECRET
-        ,
-        { expiresIn: "7 days" }
+
+        // { expiresIn: "7 days" }
       );
 
       let result = {
         mobileNumber: user.mobileNumber,
         role: user.role,
         email: user.email,
-        id:user._id,
+        id: user._id,
         token: token,
-        userDetails:user,
+        userDetails: user,
         expiresIn: TOKEN_EXPIRATION,
       };
 
