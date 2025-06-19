@@ -1,14 +1,13 @@
 // controllers/foodController.js
-const Food = require('../../models/Food');
-const Restaurant = require("../../models/Restaurant")
-const Cart = require("../../models/Cart")
-const User = require("../../models/User")
-require('dotenv').config();
-const Joi = require('joi')
-const path = require('path');
-const fs = require('fs');
-const mongoose = require('mongoose');
-
+const Food = require("../../models/Food");
+const Restaurant = require("../../models/Restaurant");
+const Cart = require("../../models/Cart");
+const User = require("../../models/User");
+require("dotenv").config();
+const Joi = require("joi");
+const path = require("path");
+const fs = require("fs");
+const mongoose = require("mongoose");
 
 // console.log("imageurl=======>>>", process.env.IMAGEURL);
 
@@ -21,15 +20,15 @@ exports.createFood = async (req, res) => {
       restaurant,
       price,
       rating,
-      description = '',
+      description = "",
       available = true,
       stock = 0,
-      isTrainding
+      isTrainding,
     } = req.body;
 
     // Parse fields that might be strings or arrays
     const parseArray = (field) => {
-      if (typeof field === 'string') {
+      if (typeof field === "string") {
         try {
           const parsed = JSON.parse(field);
           return Array.isArray(parsed) ? parsed : [parsed];
@@ -46,7 +45,7 @@ exports.createFood = async (req, res) => {
     const ingredients = parseArray(req.body.ingredients ?? []);
 
     if (!req.file) {
-      return res.status(400).json({ message: 'No image uploaded' });
+      return res.status(400).json({ message: "No image uploaded" });
     }
 
     const image = req.file.path;
@@ -64,26 +63,23 @@ exports.createFood = async (req, res) => {
       ingredients,
       available,
       stock,
-      isTrainding
+      isTrainding,
     });
 
     await newFood.save();
 
     return res.status(201).json({
-      message: 'Food detail created successfully',
-      food: newFood
+      message: "Food detail created successfully",
+      food: newFood,
     });
-
   } catch (error) {
-    console.error('Error creating food detail:', error);
+    console.error("Error creating food detail:", error);
     return res.status(400).json({
-      message: 'Error creating food detail',
-      error: error.message
+      message: "Error creating food detail",
+      error: error.message,
     });
   }
 };
-
-
 
 // Get all food details with optional filters
 exports.getAllFoods = async (req, res) => {
@@ -97,14 +93,10 @@ exports.getAllFoods = async (req, res) => {
       restaurantId,
       lat,
       lng,
-      distance = 50,
       page = 1,
-      limit = 10
+      limit = 10,
     } = req.query;
 
-    // console.log("Query params:", req.query);
-
-    const radiusInMeters = parseFloat(distance) * 1000;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const parsedLimit = parseInt(limit);
 
@@ -117,77 +109,82 @@ exports.getAllFoods = async (req, res) => {
 
     if (cuisineType) {
       foodMatch["foods.cuisineType"] = {
-        $in: Array.isArray(cuisineType) ? cuisineType : [cuisineType]
+        $in: Array.isArray(cuisineType) ? cuisineType : [cuisineType],
       };
     }
 
     if (category) {
       foodMatch["foods.category"] = {
-        $in: Array.isArray(category) ? category : [category]
+        $in: Array.isArray(category) ? category : [category],
       };
     }
 
     if (type) {
       foodMatch["foods.type"] = {
-        $in: Array.isArray(type) ? type : [type]
+        $in: Array.isArray(type) ? type : [type],
       };
     }
+
     if (ingredients) {
       foodMatch["foods.ingredients"] = {
-        $in: Array.isArray(ingredients) ? ingredients : [ingredients]
+        $in: Array.isArray(ingredients) ? ingredients : [ingredients],
       };
     }
 
     if (name) {
       const rawName = Array.isArray(name) ? name[0] : name;
-      const safeName = typeof rawName === 'string' ? rawName : String(rawName);
+      const safeName = typeof rawName === "string" ? rawName : String(rawName);
 
-      // Optional: Escape special regex characters
-      const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
       foodMatch["foods.name"] = {
         $regex: escapeRegex(safeName),
-        $options: "i"
+        $options: "i",
       };
     }
 
-
-
-
     const pipeline = [];
 
+    let closestRestaurantId = null;
+
+    // Step 1: Get the closest restaurant
     if (lat && lng) {
       pipeline.push({
         $geoNear: {
           near: {
             type: "Point",
-            coordinates: [parseFloat(lng), parseFloat(lat)]
+            coordinates: [parseFloat(lng), parseFloat(lat)],
           },
           distanceField: "distance",
-          maxDistance: radiusInMeters,
           spherical: true,
-          query: restaurantMatch
-        }
+          query: restaurantMatch,
+        },
       });
+
+      pipeline.push({ $limit: 1 });
     } else if (Object.keys(restaurantMatch).length > 0) {
       pipeline.push({ $match: restaurantMatch });
+      pipeline.push({ $limit: 1 });
     }
 
+    // Step 2: Join with foods
     pipeline.push({
       $lookup: {
         from: "foods",
         localField: "_id",
         foreignField: "restaurant",
-        as: "foods"
-      }
+        as: "foods",
+      },
     });
 
+    // Step 3: Unwind foods
     pipeline.push({ $unwind: "$foods" });
 
     if (Object.keys(foodMatch).length > 0) {
       pipeline.push({ $match: foodMatch });
     }
 
+    // Step 4: Format output
     pipeline.push({
       $project: {
         _id: 0,
@@ -195,59 +192,70 @@ exports.getAllFoods = async (req, res) => {
           id: "$_id",
           name: "$name",
           location: "$location",
-          distance: "$distance"
+          distance: "$distance",
         },
-        food: "$foods"
-      }
+        food: "$foods",
+      },
     });
 
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: parsedLimit });
 
     const results = await Restaurant.aggregate(pipeline);
+
+    if (!results.length) {
+      return res.status(200).json({
+        data: [],
+        page: parseInt(page),
+        limit: parsedLimit,
+        count: 0,
+        total: 0,
+        trendingFood: [],
+      });
+    }
+
+    // Get the closest restaurant ID for filtering trending foods
+    closestRestaurantId = results[0].restaurant.id;
+
+    // Get trending foods for that restaurant only
     const trendingFoods = await Food.aggregate([
       {
         $match: {
           isTrainding: true,
-          isDeleted: false
-        }
+          isDeleted: false,
+          restaurant: new mongoose.Types.ObjectId(closestRestaurantId),
+        },
       },
-      {
-        $sort: { createdAt: -1 } // Or sort by rating, popularity, etc.
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
-          _id: "$name", // Group by food name to ensure uniqueness
-          doc: { $first: "$$ROOT" } // Keep the first full document for each name
-        }
+          _id: "$name",
+          doc: { $first: "$$ROOT" },
+        },
       },
-      {
-        $replaceRoot: { newRoot: "$doc" } // Flatten the document
-      },
-      {
-        $limit: 10
-      }
+      { $replaceRoot: { newRoot: "$doc" } },
+      { $limit: 10 },
     ]);
-    // console.log("trending foods ",trendingFoods);
-    
 
-    const processed = results.map(item => {
+    // Format image URLs
+    const processed = results.map((item) => {
       if (item.food.image) {
-        item.food.image = process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
+        item.food.image =
+          process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
       }
       return item;
     });
 
-    const trendingFood = trendingFoods.map(item => {
+    const trendingFood = trendingFoods.map((item) => {
       if (item.image) {
         item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
       }
       return item;
     });
 
-
+    // Count total foods from that restaurant (matching filters)
     const countPipeline = JSON.parse(JSON.stringify(pipeline));
-    countPipeline.splice(-2); // remove skip and limit
+    countPipeline.splice(-2); // remove skip & limit
     countPipeline.push({ $count: "total" });
 
     const countResult = await Restaurant.aggregate(countPipeline);
@@ -259,61 +267,55 @@ exports.getAllFoods = async (req, res) => {
       limit: parsedLimit,
       count: processed.length,
       total: totalFoods,
-      trendingFood
+      trendingFood,
     });
   } catch (error) {
     console.error(error);
     res.status(400).json({
       message: "Error fetching food list",
-      error: error.message
+      error: error.message,
     });
   }
 };
-
-
-
-
-
-
-
-
 
 // Get a specific food detail by ID
 exports.getFoodById = async (req, res) => {
   // console.log("vhfhffhfhvvhgh");
 
   try {
-    const food = await Food.findById(req.params.id).populate('restaurant'); // Populate restaurant details if needed;
+    const food = await Food.findById(req.params.id).populate("restaurant"); // Populate restaurant details if needed;
     if (!food) {
-      return res.status(404).json({ message: 'Food not found' });
+      return res.status(404).json({ message: "Food not found" });
     }
 
-    food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+    food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, "/"); // Prepend the base URL to the image path
 
     // Prepend the base URL to the restaurant image only if it's missing
-    food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
+    food.restaurant.image =
+      process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, "/");
     res.status(200).json(food);
   } catch (error) {
-    res.status(400).json({ message: 'Error fetching food detail', error: error.message });
+    res
+      .status(400)
+      .json({ message: "Error fetching food detail", error: error.message });
   }
 };
-
-
 
 exports.filterFood = async (req, res) => {
   try {
     // Get the filter values from the body of the request
-    const { name, type, cuisineType, restaurantName, restaurantId, category } = req.body;
+    const { name, type, cuisineType, restaurantName, restaurantId, category } =
+      req.body;
 
     // Build the query object for the filter
     let filter = {};
 
     if (restaurantId) filter.restaurant = restaurantId;
 
-    if (name) filter.name = new RegExp(name, 'i'); // Case-insensitive match
-    if (type) filter.type = new RegExp(type, 'i');
-    if (cuisineType) filter.cuisineType = new RegExp(cuisineType, 'i');
-    if (category) filter.category = new RegExp(category, 'i');
+    if (name) filter.name = new RegExp(name, "i"); // Case-insensitive match
+    if (type) filter.type = new RegExp(type, "i");
+    if (cuisineType) filter.cuisineType = new RegExp(cuisineType, "i");
+    if (category) filter.category = new RegExp(category, "i");
 
     // console.log("vfcfc", req.body, "fdgdffffty", filter);
     // if (restaurantId){
@@ -322,36 +324,36 @@ exports.filterFood = async (req, res) => {
 
     // If restaurantName is provided, find the restaurant and add its ID to the filter
     if (restaurantName) {
-      const restaurant = await Restaurant.findOne({ name: new RegExp(restaurantName, 'i') });
+      const restaurant = await Restaurant.findOne({
+        name: new RegExp(restaurantName, "i"),
+      });
       if (restaurant) {
         filter.restaurant = restaurant._id;
       } else {
-        return res.status(404).json({ message: 'Restaurant not found' });
+        return res.status(404).json({ message: "Restaurant not found" });
       }
     }
 
     // Testing
 
-
-
     // console.log("njhx", filter);
 
-
     // Query the Food collection with the filter
-    const foods = await Food.find(filter).populate('restaurant'); // Populate restaurant details if needed
+    const foods = await Food.find(filter).populate("restaurant"); // Populate restaurant details if needed
 
-    const resultFood = foods.map(food => {
-      // const updatedPath = filePath.replace(/\\+/g, '/'); 
-      food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+    const resultFood = foods.map((food) => {
+      // const updatedPath = filePath.replace(/\\+/g, '/');
+      food.image = process.env.IMAGEURL + food.image.replace(/\\+/g, "/"); // Prepend the base URL to the image path
       // console.log("bhhgvghvfcfxf==============>>>>>",food.restaurant.image);
 
       if (!food.restaurant.image.startsWith(process.env.IMAGEURL)) {
         // Prepend the base URL to the restaurant image only if it's missing
-        food.restaurant.image = process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, '/');
+        food.restaurant.image =
+          process.env.IMAGEURL + food.restaurant.image.replace(/\\+/g, "/");
       } else {
         // If it already has the base URL, just fix the slashes
-        food.restaurant.image = food.restaurant.image.replace(/\\+/g, '/');
-      }//to the image path
+        food.restaurant.image = food.restaurant.image.replace(/\\+/g, "/");
+      } //to the image path
       return foods;
     });
     // console.log("foodssssss====", foods);
@@ -359,22 +361,21 @@ exports.filterFood = async (req, res) => {
     res.json({ foods });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
-}
+};
 
 // Update food details by ID
-
 
 exports.updateFood = async (req, res) => {
   try {
     const foodId = req.params.id;
-    console.log("req. body",req.body);
+    console.log("req. body", req.body);
 
     // Find the existing food document
     const existingFood = await Food.findById(foodId);
     if (!existingFood) {
-      return res.status(404).json({ message: 'Food not found' });
+      return res.status(404).json({ message: "Food not found" });
     }
 
     // Check if a new image is uploaded
@@ -411,27 +412,36 @@ exports.updateFood = async (req, res) => {
       try {
         req.body.cuisineType = JSON.parse(req.body.cuisineType);
       } catch {
-        req.body.cuisineType = req.body.cuisineType.split(",").map((v) => v.trim());
+        req.body.cuisineType = req.body.cuisineType
+          .split(",")
+          .map((v) => v.trim());
       }
     }
 
     // If ingredients is sent as comma-separated string, convert to array
     if (req.body.ingredients && typeof req.body.ingredients === "string") {
-      req.body.ingredients = req.body.ingredients.split(",").map((v) => v.trim());
+      req.body.ingredients = req.body.ingredients
+        .split(",")
+        .map((v) => v.trim());
     }
 
     // Update the food document
-    const updatedFood = await Food.findByIdAndUpdate(foodId, req.body, { new: true });
+    const updatedFood = await Food.findByIdAndUpdate(foodId, req.body, {
+      new: true,
+    });
 
     if (!updatedFood) {
-      return res.status(404).json({ message: 'Food not found' });
+      return res.status(404).json({ message: "Food not found" });
     }
 
-    res.status(200).json({ message: 'Food detail updated successfully', food: updatedFood });
-  }
-  catch (error) {
-    console.error('Error updating food detail:', error);
-    res.status(400).json({ message: 'Error updating food detail', error: error.message });
+    res
+      .status(200)
+      .json({ message: "Food detail updated successfully", food: updatedFood });
+  } catch (error) {
+    console.error("Error updating food detail:", error);
+    res
+      .status(400)
+      .json({ message: "Error updating food detail", error: error.message });
   }
 };
 
@@ -440,18 +450,17 @@ exports.deleteFood = async (req, res) => {
   try {
     const food = await Food.findByIdAndDelete(req.params.id);
     if (!food) {
-      return res.status(404).json({ message: 'Food not found' });
+      return res.status(404).json({ message: "Food not found" });
     }
-    res.status(200).json({ message: 'Food deleted successfully' });
+    res.status(200).json({ message: "Food deleted successfully" });
   } catch (error) {
-    res.status(400).json({ message: 'Error deleting food detail', error: error.message });
+    res
+      .status(400)
+      .json({ message: "Error deleting food detail", error: error.message });
   }
 };
 
-
 //Filter by parameter
-
-
 
 // exports.foodDetails = async (req, res) => {
 //   const id=req.params.id;
@@ -480,25 +489,23 @@ exports.deleteFood = async (req, res) => {
 //   }
 // }
 
-
 exports.addCart = async (req, res) => {
-
   // Validate the request body
   // const { error } = cartValidationSchema.validate(req.body);
   // if (error) {
   //   return res.status(400).send(error.details[0].message);
   // }
   try {
-
     const { food, quantity, type } = req.body;
     const user = req.user.userId;
     // console.log("hjdhhdshjds", req.body);
 
     // Check if the item already exists in the user's cart
     if (quantity <= 0) {
-      res.status(206).json({ message: "You can't add 0 quantity in the cart item" });
-    }
-    else {
+      res
+        .status(206)
+        .json({ message: "You can't add 0 quantity in the cart item" });
+    } else {
       const existingCartItem = await Cart.findOne({ user, food, type });
 
       if (existingCartItem) {
@@ -506,101 +513,120 @@ exports.addCart = async (req, res) => {
         existingCartItem.quantity += quantity; // Add new quantity to the existing one
         await existingCartItem.save();
         const cartDetils = await Cart.find({ user })
-          .populate('user')
+          .populate("user")
           .populate({
-            path: 'food',
+            path: "food",
 
             model: Food,
             populate: {
-              path: 'restaurant',
-              model: Restaurant
-            }
+              path: "restaurant",
+              model: Restaurant,
+            },
           });
 
         // console.log("ngbjyvjctgcht",resultFood);
-        const resultFood = cartDetils.map(cart => {
-          cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+        const resultFood = cartDetils.map((cart) => {
+          cart.food.image =
+            process.env.IMAGEURL + cart.food.image.replace(/\\+/g, "/"); // Prepend the base URL to the image path
           if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
-            cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+            cart.food.restaurant.image =
+              process.env.IMAGEURL +
+              cart.food.restaurant.image.replace(/\\+/g, "/");
           } else {
-            cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+            cart.food.restaurant.image = cart.food.restaurant.image.replace(
+              /\\+/g,
+              "/"
+            );
           }
           return cartDetils;
         });
 
-
-        return res.status(200).json({ message: "Item updated in cart", result: resultFood });
+        return res
+          .status(200)
+          .json({ message: "Item updated in cart", result: resultFood });
       } else {
         // If it doesn't exist, create a new cart item
         const newCartItem = new Cart({
           user,
           food,
           quantity,
-          type
+          type,
         });
 
         await newCartItem.save();
         // console.log("dffffffffffffffffffffffff");
 
         const cartDetils = await Cart.find({ user })
-          .populate('user')
+          .populate("user")
           .populate({
-            path: 'food',
+            path: "food",
             model: Food,
             populate: {
-              path: 'restaurant',
-              model: Restaurant
-            }
+              path: "restaurant",
+              model: Restaurant,
+            },
           });
         // console.log("dffffffffffffffffffffffff", cartDetils);
 
         const resultCart = cartDetils.map((cart) => {
-          cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');  // Prepend the base URL to the image path
+          cart.food.image =
+            process.env.IMAGEURL + cart.food.image.replace(/\\+/g, "/"); // Prepend the base URL to the image path
           if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
-            cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+            cart.food.restaurant.image =
+              process.env.IMAGEURL +
+              cart.food.restaurant.image.replace(/\\+/g, "/");
           } else {
-            cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+            cart.food.restaurant.image = cart.food.restaurant.image.replace(
+              /\\+/g,
+              "/"
+            );
           }
           return cartDetils;
         });
-        res.status(201).json({ message: "Added to the Cart", result: resultCart });
+        res
+          .status(201)
+          .json({ message: "Added to the Cart", result: resultCart });
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 
 exports.getCart = async (req, res) => {
   try {
     const cartDetils = await Cart.find({ user: req.user.userId })
-      .populate('user')
+      .populate("user")
       .populate({
-        path: 'food',
+        path: "food",
         model: Food,
         populate: {
-          path: 'restaurant',
-          model: Restaurant
-        }
+          path: "restaurant",
+          model: Restaurant,
+        },
       });
 
     // console.log("the cart items is ", cartDetils);
 
-    const resultFood = cartDetils.map(cart => {
+    const resultFood = cartDetils.map((cart) => {
       if (cart.food) {
         if (cart.food.image) {
-          cart.food.image = process.env.IMAGEURL + cart.food.image.replace(/\\+/g, '/');
+          cart.food.image =
+            process.env.IMAGEURL + cart.food.image.replace(/\\+/g, "/");
         }
 
         if (cart.food.restaurant) {
           if (cart.food.restaurant.image) {
             if (!cart.food.restaurant.image.startsWith(process.env.IMAGEURL)) {
-              cart.food.restaurant.image = process.env.IMAGEURL + cart.food.restaurant.image.replace(/\\+/g, '/');
+              cart.food.restaurant.image =
+                process.env.IMAGEURL +
+                cart.food.restaurant.image.replace(/\\+/g, "/");
             } else {
-              cart.food.restaurant.image = cart.food.restaurant.image.replace(/\\+/g, '/');
+              cart.food.restaurant.image = cart.food.restaurant.image.replace(
+                /\\+/g,
+                "/"
+              );
             }
           }
         }
@@ -609,12 +635,12 @@ exports.getCart = async (req, res) => {
     });
     // console.log("bxdjhdhjf11111111111111", resultFood[0].food.restaurant);
 
-
-    return res.status(200).json({ message: "Fetched cart Details", result: resultFood });
-  }
-  catch (error) {
+    return res
+      .status(200)
+      .json({ message: "Fetched cart Details", result: resultFood });
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -623,19 +649,17 @@ exports.deleteCart = async (req, res) => {
   const cartItemId = req.body.id;
 
   try {
-
     // Find the cart item by ID and delete it
     const cartItem = await Cart.findByIdAndDelete(cartItemId);
 
     if (!cartItem) {
-      return res.status(404).send('Cart item not found');
+      return res.status(404).send("Cart item not found");
     }
 
-    res.status(200).json({ message: 'cart Item  deleted successfully' });
-  }
-  catch (err) {
+    res.status(200).json({ message: "cart Item  deleted successfully" });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -648,7 +672,7 @@ exports.removeCart = async (req, res) => {
     // Validate the request body for quantity and operation
     const { error } = Joi.object({
       id: Joi.string().required(),
-      operation: Joi.string().valid('plus', 'minus').required(), // operation must be either 'plus' or 'minus'
+      operation: Joi.string().valid("plus", "minus").required(), // operation must be either 'plus' or 'minus'
     }).validate(req.body);
 
     if (error) {
@@ -659,39 +683,43 @@ exports.removeCart = async (req, res) => {
     const cartItem = await Cart.findById(cartItemId);
 
     if (!cartItem) {
-      return res.status(404).send('Cart item not found');
+      return res.status(404).send("Cart item not found");
     }
 
     // Modify quantity based on operation
-    if (operation === 'plus') {
+    if (operation === "plus") {
       cartItem.quantity += 1; // Increase quantity by 1
-    } else if (operation === 'minus') {
+    } else if (operation === "minus") {
       if (cartItem.quantity > 1) {
         cartItem.quantity -= 1; // Decrease quantity by 1, but don't go below 1
       } else {
-        return res.status(400).send('Quantity cannot be less than 1');
+        return res.status(400).send("Quantity cannot be less than 1");
       }
     }
 
     // Save the updated cart item
     await cartItem.save();
 
-    res.status(200).json({ message: 'Cart item updated successfully', quantity: cartItem.quantity });
+    res.status(200).json({
+      message: "Cart item updated successfully",
+      quantity: cartItem.quantity,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Radius of Earth in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
   return distance;
@@ -701,11 +729,11 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 exports.calculateDistance = async () => {
   try {
     // Fetch the user and restaurant data from database by their _id
-    const user = await User.findById('6752a0ecbeddc2e748509200');  // Example user _id
-    const restaurant = await Restaurant.findById('6752a1f8beddc2e748509204');  // Example restaurant _id
+    const user = await User.findById("6752a0ecbeddc2e748509200"); // Example user _id
+    const restaurant = await Restaurant.findById("6752a1f8beddc2e748509204"); // Example restaurant _id
 
     if (!user || !restaurant) {
-      throw new Error('User or Restaurant not found');
+      throw new Error("User or Restaurant not found");
     }
 
     // Extracting lat and lng from the user and restaurant data
@@ -715,9 +743,13 @@ exports.calculateDistance = async () => {
     const restaurantLng = restaurant.lng;
     // console.log("bhbcjhb bhbjb======================>>>", userLat, userLng, restaurantLat, restaurantLng);
 
-
     // Calculate distance between user and restaurant using Haversine formula
-    const distance = haversineDistance(userLat, userLng, restaurantLat, restaurantLng);
+    const distance = haversineDistance(
+      userLat,
+      userLng,
+      restaurantLat,
+      restaurantLng
+    );
 
     // console.log(`The distance between the user and the restaurant is: ${distance.toFixed(2)} kilometers.`);
   } catch (error) {
@@ -725,21 +757,22 @@ exports.calculateDistance = async () => {
   }
 };
 
-
-
-
 exports.duplicateFoodToAllRestaurants = async () => {
   try {
-    const originalRestaurantId = new mongoose.Types.ObjectId('6836b9d9b99ea3bca88d1617');
+    const originalRestaurantId = new mongoose.Types.ObjectId(
+      "6836b9d9b99ea3bca88d1617"
+    );
 
     // STEP 1: Get food items of the source restaurant
     const foodItems = await Food.find({ restaurant: originalRestaurantId });
     if (!foodItems.length) {
-      throw new Error('No food items found for the original restaurant');
+      throw new Error("No food items found for the original restaurant");
     }
 
     // STEP 2: Get all restaurants except the source one
-    const restaurants = await Restaurant.find({ _id: { $ne: originalRestaurantId } });
+    const restaurants = await Restaurant.find({
+      _id: { $ne: originalRestaurantId },
+    });
 
     // STEP 3: Prepare cloned food items
     const bulkInsert = [];
@@ -768,11 +801,10 @@ exports.duplicateFoodToAllRestaurants = async () => {
     } else {
       // console.log('⚠️ No restaurants found to copy food to.');
     }
-
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
   }
   //  finally {
   //   // mongoose.connection.close();
   // }
-}
+};
