@@ -1,21 +1,26 @@
 const cors = require("cors");
 const exp = require("express");
-const upload = require('express-fileupload')
+const upload = require("express-fileupload");
 const passport = require("passport");
 const morgan = require("morgan");
 const { connect } = require("mongoose");
 const { success, error } = require("consola");
-const path = require('path');
+const path = require("path");
 // const Restaurant = require('./models/Restaurant');
 // const axios = require('axios');
-const multer = require('multer');
-const superagent = require('superagent');
-require('dotenv').config();
-const mysql = require('mysql2');
-
+const multer = require("multer");
+const superagent = require("superagent");
+require("dotenv").config();
+const mysql = require("mysql2");
 
 // const apiUrl = 'https://api.opencagedata.com/geocode/v1/json?q=Kolkata&key=66f574589d3940dc8b1fd4184a05918f';
-const { MONGO_HOST, MONGO_DB_NAME, REQUEST_TIMEOUT, NODE_PORT, MONGO_URL } = require("./config");
+const {
+  MONGO_HOST,
+  MONGO_DB_NAME,
+  REQUEST_TIMEOUT,
+  NODE_PORT,
+  MONGO_URL,
+} = require("./config");
 const { log } = require("console");
 const PORT = NODE_PORT || 5000;
 
@@ -24,7 +29,7 @@ app.use(morgan("dev"));
 
 app.use(cors());
 app.use(cors({ origin: "*", credentials: true }));
-app.use(cors({ origin: "https://foodapp.sensegeofence.com" }));
+// app.use(cors({ origin: "https://foodapp.sensegeofence.com" }));
 app.use(exp.json());
 app.use(
   exp.urlencoded({
@@ -32,7 +37,7 @@ app.use(
   })
 );
 // app.use(upload()); //file upload
-app.use('/Upload', exp.static(path.join(__dirname, 'Upload')));
+app.use("/Upload", exp.static(path.join(__dirname, "Upload")));
 
 // app.use(passport.initialize());
 // require("./middlewares/passport")(passport);
@@ -57,14 +62,17 @@ const startApp = async () => {
     //   autoCreate: true,
     // })
 
-    await connect("mongodb+srv://JoydeepShaw:2106%40Joy@app-backend.wwzbjkg.mongodb.net/", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: REQUEST_TIMEOUT,
-      autoIndex: true,
-      autoCreate: true,
-      dbName: MONGO_DB_NAME,
-    })
+    await connect(
+      "mongodb+srv://JoydeepShaw:2106%40Joy@app-backend.wwzbjkg.mongodb.net/",
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: REQUEST_TIMEOUT,
+        autoIndex: true,
+        autoCreate: true,
+        dbName: MONGO_DB_NAME,
+      }
+    );
 
     success({
       message: `Successfully connected with the Database \n${MONGO_DB_NAME}`,
@@ -142,14 +150,4 @@ const startApp = async () => {
 //   });
 // });
 
-
-
-
-
-
 startApp();
-
-
-
-
-
