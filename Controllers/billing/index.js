@@ -228,6 +228,8 @@ exports.getFoodBillings = async (req, res) => {
 
     const total = await FoodBilling.countDocuments(filters);
 
+    // console.log("ghfggf", billings);
+
     res.status(200).json({
       data: billings,
       total,

@@ -218,6 +218,25 @@ exports.getAllFoods = async (req, res) => {
     closestRestaurantId = results[0].restaurant.id;
 
     // Get trending foods for that restaurant only
+    // const trendingFoods = await Food.aggregate([
+    //   {
+    //     $match: {
+    //       isTrainding: true,
+    //       isDeleted: false,
+    //       restaurant: new mongoose.Types.ObjectId(closestRestaurantId),
+    //     },
+    //   },
+    //   { $sort: { createdAt: -1 } },
+    //   {
+    //     $group: {
+    //       _id: "$name",
+    //       doc: { $first: "$$ROOT" },
+    //     },
+    //   },
+    //   { $replaceRoot: { newRoot: "$doc" } },
+    //   { $limit: 10 },
+    // ]);
+
     const trendingFoods = await Food.aggregate([
       {
         $match: {
@@ -226,16 +245,34 @@ exports.getAllFoods = async (req, res) => {
           restaurant: new mongoose.Types.ObjectId(closestRestaurantId),
         },
       },
-      { $sort: { createdAt: -1 } },
+      {
+        $sort: {
+          name: 1, // Ensures same name order
+          createdAt: -1, // Newer ones first for each name
+          _id: 1, // Tiebreaker: always unique
+        },
+      },
       {
         $group: {
-          _id: "$name",
+          _id: "$name", // Get one per name
           doc: { $first: "$$ROOT" },
         },
       },
-      { $replaceRoot: { newRoot: "$doc" } },
-      { $limit: 10 },
+      {
+        $replaceRoot: { newRoot: "$doc" },
+      },
+      {
+        $sort: {
+          createdAt: -1, // Final stable sort of grouped docs
+          _id: 1,
+        },
+      },
+      {
+        $limit: 10,
+      },
     ]);
+
+    const foodArray = [];
 
     // Format image URLs
     const processed = results.map((item) => {
@@ -243,6 +280,7 @@ exports.getAllFoods = async (req, res) => {
         item.food.image =
           process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
       }
+
       return item;
     });
 
@@ -250,8 +288,10 @@ exports.getAllFoods = async (req, res) => {
       if (item.image) {
         item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
       }
+      foodArray.push(item.name);
       return item;
     });
+    console.log("fiohfchcc", foodArray);
 
     // Count total foods from that restaurant (matching filters)
     const countPipeline = JSON.parse(JSON.stringify(pipeline));
