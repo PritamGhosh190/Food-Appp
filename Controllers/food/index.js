@@ -291,7 +291,7 @@ exports.getAllFoods = async (req, res) => {
       foodArray.push(item.name);
       return item;
     });
-    console.log("fiohfchcc", foodArray);
+    // console.log("fiohfchcc", foodArray);
 
     // Count total foods from that restaurant (matching filters)
     const countPipeline = JSON.parse(JSON.stringify(pipeline));
