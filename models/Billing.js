@@ -61,7 +61,7 @@ const foodBillingSchema = new mongoose.Schema(
     deliveryStatus: {
       type: String,
       enum: ["Ordered", "Accepted", "Out of Delivery", "Delivered"],
-      default: "Pending",
+      default: "Ordered",
     },
     deliveryTime: {
       type: String,
