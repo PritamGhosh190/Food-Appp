@@ -128,7 +128,7 @@ const otpVerify1 = async (userRequest, res) => {
                     email: savedUser.email,
                   },
                   process.env.SECRET,
-                  { expiresIn: "7 days" }
+                  // { expiresIn: "7 days" }
                 );
 
                 let result = {
@@ -138,7 +138,7 @@ const otpVerify1 = async (userRequest, res) => {
                   id: savedUser._id,
                   token: token,
                   userDetails: savedUser,
-                  expiresIn: TOKEN_EXPIRATION,
+                  // expiresIn: TOKEN_EXPIRATION,
                 };
 
                 return res.status(202).json({
@@ -164,7 +164,7 @@ const otpVerify1 = async (userRequest, res) => {
                 email: user.email,
               },
               process.env.SECRET,
-              { expiresIn: "7 days" }
+              // { expiresIn: "7 days" }
             );
 
             let result = {
@@ -174,7 +174,7 @@ const otpVerify1 = async (userRequest, res) => {
               id: user._id,
               token: token,
               userDetails: user,
-              expiresIn: TOKEN_EXPIRATION,
+              // expiresIn: TOKEN_EXPIRATION,
             };
 
             return res.status(202).json({
@@ -230,11 +230,14 @@ const otpGenerate = async (req, res) => {
 
     // Rate limit: block if OTP sent in last 1 min
     const recentOtp = await Otp.findOne({ phone }).sort({ createdAt: -1 });
-    if (recentOtp && new Date() - recentOtp.createdAt < 60 * 1000) {
-      return res
-        .status(429)
-        .json({ message: "Wait 60 seconds before requesting new OTP" });
-    }
+    // if (
+    //   recentOtp
+    //   // Date.now() - new Date(recentOtp.createdAt).getTime() < 60 * 1000
+    // ) {
+    //   return res
+    //     .status(429)
+    //     .json({ message: "Wait 60 seconds before requesting new OTP" });
+
 
     // Clear previous entries
     await Otp.deleteMany({ phone });
@@ -250,6 +253,7 @@ const otpGenerate = async (req, res) => {
       .status(200)
       .json({ message: "OTP sent successfully", success: true });
   } catch (err) {
+    console.log("err", err);
     return res
       .status(500)
       .json({ message: err.message || "OTP send failed", success: false });
@@ -310,14 +314,14 @@ const otpVerify = async (req, res) => {
         email: user.email,
       },
       SECRET,
-      { expiresIn: TOKEN_EXPIRATION || "7d" }
+      // { expiresIn: TOKEN_EXPIRATION || "7d" }
     );
 
     return res.status(202).json({
       token,
       userDetails: user,
       mobileNumber,
-      expiresIn: TOKEN_EXPIRATION || "7d",
+      // expiresIn: TOKEN_EXPIRATION || "7d",
       message: "Login successful",
       success: true,
     });

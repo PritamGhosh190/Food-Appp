@@ -15,11 +15,11 @@ const sendSms = async (phone, otp) => {
 
   try {
     const response = await superagent.get(url).query(params);
-    console.log("SMS Sent:", response.body);
+    // console.log("SMS Sent:", response.body);
     return response.body;
   } catch (err) {
     console.error("SMS sending failed:", err.response?.body || err.message);
-    throw new Error("Failed to send OTP");
+    // throw new Error("Failed to send OTP");
   }
 };
 

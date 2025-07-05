@@ -84,7 +84,7 @@ const login = async (userRequest, role, res) => {
         id: user._id,
         token: token,
         userDetails: user,
-        expiresIn: TOKEN_EXPIRATION,
+        // expiresIn: TOKEN_EXPIRATION,
       };
 
       return res.status(200).json({

@@ -2,8 +2,8 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { createFood, getAllFoods, getFoodById, updateFood, deleteFood,filterFood,addCart,getCart,removeCart,deleteCart,calculateDistance ,foodDetails,duplicateFoodToAllRestaurants} = require("../../Controllers/food");
-const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth');
+const { createFood, getAllFoods, getFoodById, updateFood, deleteFood, filterFood, addCart, getCart, removeCart, deleteCart, calculateDistance, foodDetails, duplicateFoodToAllRestaurants } = require("../../Controllers/food");
+const { userAuth, checkRole, serializeUser } = require('../../Controllers/auth');
 const { log } = require('async');
 const fs = require('fs');
 
@@ -23,20 +23,20 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Create a new food entry
-router.post('/add',checkRole(["admin","seller"]), upload.single('image'), createFood);
-// router.get('/addduplicate',duplicateFoodToAllRestaurants );
+router.post('/add', checkRole(["admin", "seller"]), upload.single('image'), createFood);
+router.get('/addduplicate', duplicateFoodToAllRestaurants);
 // Update food details by ID
-router.put('/update/:id',checkRole(["admin","seller"]), upload.single('image'), updateFood);
+router.put('/update/:id', checkRole(["admin", "seller"]), upload.single('image'), updateFood);
 
 // Get all food details
 router.get('/foods', getAllFoods);
 
 // Get a food detail by ID
-router.get('/foods/:id',async(req,res)=>{
+router.get('/foods/:id', async (req, res) => {
   // console.log("gvgvgggvghhghg");
-  
-   await getFoodById(req,res)
-  });
+
+  await getFoodById(req, res)
+});
 
 
 
