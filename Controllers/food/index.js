@@ -126,10 +126,12 @@ exports.getAllFoods = async (req, res) => {
     }
 
     if (ingredients) {
+      const ingArray = Array.isArray(ingredients) ? ingredients : [ingredients];
       foodMatch["foods.ingredients"] = {
-        $in: Array.isArray(ingredients) ? ingredients : [ingredients],
+        $in: ingArray.map((ing) => new RegExp(`^${ing}$`, "i")),
       };
     }
+
 
     if (name) {
       const rawName = Array.isArray(name) ? name[0] : name;
@@ -280,7 +282,7 @@ exports.getAllFoods = async (req, res) => {
         item.food.image =
           process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
       }
-
+      foodArray.push(item.food.name);
       return item;
     });
 
@@ -288,7 +290,7 @@ exports.getAllFoods = async (req, res) => {
       if (item.image) {
         item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
       }
-      foodArray.push(item.name);
+      // foodArray.push(item.name);
       return item;
     });
     // console.log("fiohfchcc", foodArray);
@@ -308,6 +310,7 @@ exports.getAllFoods = async (req, res) => {
       count: processed.length,
       total: totalFoods,
       trendingFood,
+      foodArray,
     });
   } catch (error) {
     console.error(error);
@@ -757,9 +760,9 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
   return distance;

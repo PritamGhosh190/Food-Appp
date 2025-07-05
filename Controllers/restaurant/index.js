@@ -343,6 +343,9 @@ exports.getAllRestaurants = async (req, res) => {
     const role = req.user.role;
     const userId = req.user.userId;
     const baseUrl = process.env.IMAGEURL;
+    // console.log("role");
+    // console.log("userId", userId);
+    // console.log("baseUrl", baseUrl);
 
     if (role === "seller") {
       // Seller: Only assigned restaurant

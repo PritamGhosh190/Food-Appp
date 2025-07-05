@@ -35,7 +35,7 @@ const foodSchema = new mongoose.Schema({
   category: {
     type: [String],
     required: true,
-    enum: ['starter', 'main course', 'dessert', 'beverage', 'snack'],
+    enum: ['starter', 'main course', 'dessert', 'beverage', 'snack', "thali"],
     set: arr => arr.map(v => v.toLowerCase()),
     validate: {
       validator: arr => Array.isArray(arr) && arr.length > 0,
@@ -83,9 +83,9 @@ const foodSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  isTrainding:{
-    type:Boolean,
-    default:false
+  isTrainding: {
+    type: Boolean,
+    default: false
   },
   isDeleted: {
     type: Boolean,
@@ -112,10 +112,10 @@ module.exports = Food;
 // Define the food schema
 // const foodSchema = new mongoose.Schema({
 //   name: { type: String, required: true },
-//   restaurant: { 
-//     type: mongoose.Schema.Types.ObjectId, 
+//   restaurant: {
+//     type: mongoose.Schema.Types.ObjectId,
 //     ref: Restaurant, // Reference to the Restaurant model
-//     required: true 
+//     required: true
 //   },
 //   image: { type: String, required: true }, // URL of the image (you can use multer for file upload)
 //   distance: { type: Number},
