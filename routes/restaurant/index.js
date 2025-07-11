@@ -1,42 +1,44 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
+const multer = require("multer");
+const path = require("path");
+const {
+  userAuth,
+  checkRole,
+  serializeUser,
+} = require("../../Controllers/auth");
 // const {userAuth, checkRole, serializeUser} = require('../Controllers/auth')
 
-
 const restaurantController = require("../../Controllers/restaurant");
-const { log } = require('console');
-
+const { log } = require("console");
 
 // Multer storage configuration
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'Upload/Restaurant/'); // Save files in 'uploads' folder
-    },
-    limits: { fileSize: 10 * 1024 * 1024 },
-    filename: (req, file, cb) => {
-        // Set the file name as the current timestamp + original file name
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+  destination: (req, file, cb) => {
+    cb(null, "Upload/Restaurant/"); // Save files in 'uploads' folder
+  },
+  limits: { fileSize: 10 * 1024 * 1024 },
+  filename: (req, file, cb) => {
+    // Set the file name as the current timestamp + original file name
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
 });
 
 // File filter to accept only image files
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Only image files are allowed'), false);
-    }
+  const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed"), false);
+  }
 };
 
 // Initialize multer with the defined storage and file filter
 const upload = multer({ storage: storage });
 // router.post("/add1", async (req, res) => {
 //     console.log("byggy",req.file);
-    
+
 //     console.log("fileUpload",req.body);
 //     try {
 //         upload.single('Restaurant_image')
@@ -66,19 +68,37 @@ const upload = multer({ storage: storage });
 //     }
 // });
 
-
-
 // Route to create a new restaurant (with image upload)
-router.post('/add',userAuth,checkRole(["admin","seller"]), upload.single('Restaurant_image'), restaurantController.createrestaurant);
+router.post(
+  "/add",
+  userAuth,
+  checkRole(["admin", "seller"]),
+  upload.single("Restaurant_image"),
+  restaurantController.createrestaurant
+);
 
 // Route to update an existing restaurant (with image upload)
-router.put('/update/:id',userAuth, upload.single('Restaurant_image'),async (req, res) => {
-    await restaurantController.updaterestaurant(req, res)
-  });
+router.put(
+  "/update/:id",
+  userAuth,
+  upload.single("Restaurant_image"),
+  async (req, res) => {
+    await restaurantController.updaterestaurant(req, res);
+  }
+);
 
 // // Other routes remain unchanged
-router.get('/getAllRestaurants' ,userAuth,restaurantController.getAllRestaurants);
-router.get('/getRestaurantAndFoods',userAuth, restaurantController.getRestaurantAndFoods);
+router.get(
+  "/getAllRestaurants",
+  userAuth,
+  restaurantController.getAllRestaurants
+);
+router.get("/list", userAuth, restaurantController.restaurantList);
+router.get(
+  "/getRestaurantAndFoods",
+  userAuth,
+  restaurantController.getRestaurantAndFoods
+);
 // router.get('/:id', restaurantController.getrestaurantById);
 // router.delete('/:id', restaurantController.deleterestaurant);
 

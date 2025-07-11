@@ -127,7 +127,7 @@ const otpVerify1 = async (userRequest, res) => {
                     mobileNumber: savedUser.mobileNumber,
                     email: savedUser.email,
                   },
-                  process.env.SECRET,
+                  process.env.SECRET
                   // { expiresIn: "7 days" }
                 );
 
@@ -163,7 +163,7 @@ const otpVerify1 = async (userRequest, res) => {
                 mobileNumber: user.mobileNumber,
                 email: user.email,
               },
-              process.env.SECRET,
+              process.env.SECRET
               // { expiresIn: "7 days" }
             );
 
@@ -230,14 +230,14 @@ const otpGenerate = async (req, res) => {
 
     // Rate limit: block if OTP sent in last 1 min
     const recentOtp = await Otp.findOne({ phone }).sort({ createdAt: -1 });
-    // if (
-    //   recentOtp
-    //   // Date.now() - new Date(recentOtp.createdAt).getTime() < 60 * 1000
-    // ) {
-    //   return res
-    //     .status(429)
-    //     .json({ message: "Wait 60 seconds before requesting new OTP" });
-
+    if (
+      recentOtp &&
+      Date.now() - new Date(recentOtp.createdAt).getTime() < 60 * 1000
+    ) {
+      return res
+        .status(429)
+        .json({ message: "Wait 60 seconds before requesting new OTP" });
+    }
 
     // Clear previous entries
     await Otp.deleteMany({ phone });
@@ -313,9 +313,9 @@ const otpVerify = async (req, res) => {
         mobileNumber: user.mobileNumber,
         email: user.email,
       },
-      SECRET,
-      // { expiresIn: TOKEN_EXPIRATION || "7d" }
+      SECRET
     );
+    // console.log("token generated", token);
 
     return res.status(202).json({
       token,

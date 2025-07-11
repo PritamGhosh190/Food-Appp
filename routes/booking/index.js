@@ -6,6 +6,7 @@ const {
   getRestaurantBookings,
   updateBookingStatus,
   cancelBooking,
+  getAllBookings,
 } = require("../../Controllers/booking");
 
 // Create a new booking
@@ -13,6 +14,7 @@ router.post("/", createBooking);
 
 // Get all bookings of a user
 router.get("/user/:userId", getUserBookings);
+router.get("/", getAllBookings);
 
 // Get all bookings for a restaurant
 router.get("/restaurant/:restaurantId", getRestaurantBookings);

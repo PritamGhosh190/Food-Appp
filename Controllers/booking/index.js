@@ -1,11 +1,13 @@
 const Booking = require("../../models/Booking");
+const Restaurant = require("../../models/Restaurant");
+const mongoose = require("mongoose");
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
   try {
-    const { name, phone, groupSize, date, time, restaurantId } =
+    const { name, phone, groupSize, date, time, restaurantId, additional } =
       req.body;
-      const userId=req.user.userId;
+    const userId = req.user.userId;
 
     const booking = new Booking({
       name,
@@ -15,6 +17,7 @@ exports.createBooking = async (req, res) => {
       time,
       restaurantId,
       userId,
+      additional,
       status: "booked",
     });
 
@@ -94,5 +97,79 @@ exports.cancelBooking = async (req, res) => {
     res.status(200).json({ message: "Booking cancelled", booking });
   } catch (error) {
     res.status(500).json({ error: "Error cancelling booking" });
+  }
+};
+
+exports.getAllBookings = async (req, res) => {
+  try {
+    const { role, userId } = req.user;
+    const { status } = req.query;
+    // console.log(role, userId, "vctjtfft");
+
+    let match = {};
+
+    if (role === "user") {
+      match.userId = new mongoose.Types.ObjectId(userId);
+    } else if (role === "seller") {
+      const restaurant = await Restaurant.findOne({
+        assignUser: new mongoose.Types.ObjectId(userId),
+      });
+      if (!restaurant) {
+        return res
+          .status(404)
+          .json({ message: "No restaurant assigned to this seller" });
+      }
+      match.restaurantId = restaurant._id;
+    }
+
+    if (status) {
+      match.status = status;
+    }
+
+    // 🧠 Use aggregation to sort by combined date + time
+    const bookings = await Booking.aggregate([
+      { $match: match },
+      {
+        $addFields: {
+          // Combine `date` and `time` into a full datetime
+          bookingDateTime: {
+            $dateFromString: {
+              dateString: {
+                $concat: [
+                  { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                  "T",
+                  "$time",
+                  ":00", // Assuming time format is "HH:mm"
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $sort: { bookingDateTime: -1 } }, // Sort by latest booking datetime
+      {
+        $lookup: {
+          from: "restaurants",
+          localField: "restaurantId",
+          foreignField: "_id",
+          as: "restaurant",
+        },
+      },
+      { $unwind: "$restaurant" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+    ]);
+
+    res.status(200).json({ status: true, data: bookings });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
