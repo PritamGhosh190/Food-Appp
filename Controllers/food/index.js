@@ -82,7 +82,7 @@ exports.createFood = async (req, res) => {
 };
 
 // Get all food details with optional filters
-exports.getAllFoods = async (req, res) => {
+exports.getAllFoods1 = async (req, res) => {
   try {
     const {
       name,
@@ -126,12 +126,13 @@ exports.getAllFoods = async (req, res) => {
     }
 
     if (ingredients) {
-      const ingArray = Array.isArray(ingredients) ? ingredients : [ingredients];
+      const ingredientArray = Array.isArray(ingredients)
+        ? ingredients
+        : [ingredients];
       foodMatch["foods.ingredients"] = {
-        $in: ingArray.map((ing) => new RegExp(`^${ing}$`, "i")),
+        $in: ingredientArray.map((item) => new RegExp(`^${item}$`, "i")),
       };
     }
-
 
     if (name) {
       const rawName = Array.isArray(name) ? name[0] : name;
@@ -274,7 +275,7 @@ exports.getAllFoods = async (req, res) => {
       },
     ]);
 
-    const foodArray = [];
+    // const foodArray = [];
 
     // Format image URLs
     const processed = results.map((item) => {
@@ -282,7 +283,7 @@ exports.getAllFoods = async (req, res) => {
         item.food.image =
           process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
       }
-      foodArray.push(item.food.name);
+      // foodArray.push(item.food.name);
       return item;
     });
 
@@ -310,7 +311,223 @@ exports.getAllFoods = async (req, res) => {
       count: processed.length,
       total: totalFoods,
       trendingFood,
-      foodArray,
+      // foodArray,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      message: "Error fetching food list",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAllFoods = async (req, res) => {
+  try {
+    const {
+      name,
+      cuisineType,
+      category,
+      ingredients,
+      type,
+      restaurantId,
+      lat,
+      lng,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const parsedLimit = parseInt(limit);
+
+    const restaurantMatch = {};
+    if (restaurantId) {
+      restaurantMatch._id = new mongoose.Types.ObjectId(restaurantId);
+    }
+
+    const foodMatch = {};
+
+    if (cuisineType) {
+      const cuisineArray = Array.isArray(cuisineType)
+        ? cuisineType
+        : [cuisineType];
+      foodMatch["foods.cuisineType"] = {
+        $in: cuisineArray.map((item) => new RegExp(`^${item}$`, "i")),
+      };
+    }
+
+    if (category) {
+      const categoryArray = Array.isArray(category) ? category : [category];
+      foodMatch["foods.category"] = {
+        $in: categoryArray.map((item) => new RegExp(`^${item}$`, "i")),
+      };
+    }
+
+    if (type) {
+      const typeArray = Array.isArray(type) ? type : [type];
+      foodMatch["foods.type"] = {
+        $in: typeArray.map((item) => new RegExp(`^${item}$`, "i")),
+      };
+    }
+
+    if (ingredients) {
+      const ingredientArray = Array.isArray(ingredients)
+        ? ingredients
+        : [ingredients];
+      foodMatch["foods.ingredients"] = {
+        $in: ingredientArray.map((item) => new RegExp(`^${item}$`, "i")),
+      };
+    }
+
+    if (name) {
+      const rawName = Array.isArray(name) ? name[0] : name;
+      const safeName = typeof rawName === "string" ? rawName : String(rawName);
+      const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      foodMatch["foods.name"] = {
+        $regex: escapeRegex(safeName),
+        $options: "i",
+      };
+    }
+
+    // -------- Build main aggregation pipeline --------
+    const pipeline = [];
+
+    // Step 1: Geo or ID filter
+    if (lat && lng) {
+      pipeline.push({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          distanceField: "distance",
+          spherical: true,
+          query: restaurantMatch,
+        },
+      });
+      pipeline.push({ $limit: 1 });
+    } else if (Object.keys(restaurantMatch).length > 0) {
+      pipeline.push({ $match: restaurantMatch });
+      pipeline.push({ $limit: 1 });
+    }
+
+    // Step 2: Join foods
+    pipeline.push({
+      $lookup: {
+        from: "foods",
+        localField: "_id",
+        foreignField: "restaurant",
+        as: "foods",
+      },
+    });
+
+    // Step 3: Unwind foods
+    pipeline.push({ $unwind: "$foods" });
+
+    // Step 4: Filter by food criteria
+    if (Object.keys(foodMatch).length > 0) {
+      pipeline.push({ $match: foodMatch });
+    }
+
+    // Step 5: Project final format
+    pipeline.push({
+      $project: {
+        _id: 0,
+        restaurant: {
+          id: "$_id",
+          name: "$name",
+          location: "$location",
+          distance: "$distance",
+        },
+        food: "$foods",
+      },
+    });
+
+    // -------- Clone for counting total before pagination --------
+    const countPipeline = [...pipeline]; // Deep copy to preserve stages
+    countPipeline.push({ $count: "total" });
+
+    const countResult = await Restaurant.aggregate(countPipeline);
+    const totalFoods = countResult.length > 0 ? countResult[0].total : 0;
+
+    // -------- Add pagination stages to main pipeline --------
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parsedLimit });
+
+    const results = await Restaurant.aggregate(pipeline);
+
+    if (!results.length) {
+      return res.status(200).json({
+        data: [],
+        page: parseInt(page),
+        limit: parsedLimit,
+        count: 0,
+        total: 0,
+        trendingFood: [],
+      });
+    }
+
+    // Get closest restaurant ID from result
+    const closestRestaurantId = results[0].restaurant.id;
+
+    // -------- Trending food query --------
+    const trendingFoods = await Food.aggregate([
+      {
+        $match: {
+          isTrainding: true,
+          isDeleted: false,
+          restaurant: new mongoose.Types.ObjectId(closestRestaurantId),
+        },
+      },
+      {
+        $sort: {
+          name: 1,
+          createdAt: -1,
+          _id: 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$name",
+          doc: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$doc" } },
+      {
+        $sort: {
+          createdAt: -1,
+          _id: 1,
+        },
+      },
+      { $limit: 10 },
+    ]);
+
+    // -------- Format results --------
+    // const foodArray = [];
+    const processed = results.map((item) => {
+      if (item.food.image) {
+        item.food.image =
+          process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
+      }
+      // foodArray.push(item.food.name);
+      return item;
+    });
+
+    const trendingFood = trendingFoods.map((item) => {
+      if (item.image) {
+        item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
+      }
+      return item;
+    });
+
+    res.status(200).json({
+      data: processed,
+      page: parseInt(page),
+      limit: parsedLimit,
+      count: processed.length,
+      total: totalFoods,
+      trendingFood,
     });
   } catch (error) {
     console.error(error);
@@ -541,7 +758,7 @@ exports.addCart = async (req, res) => {
   try {
     const { food, quantity, type } = req.body;
     const user = req.user.userId;
-    // console.log("hjdhhdshjds", req.body);
+    console.log("hjdhhdshjds", req.body);
 
     // Check if the item already exists in the user's cart
     if (quantity <= 0) {
@@ -760,9 +977,9 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
   return distance;

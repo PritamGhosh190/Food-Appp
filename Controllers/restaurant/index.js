@@ -426,3 +426,13 @@ exports.getAllRestaurants = async (req, res) => {
     });
   }
 };
+
+exports.restaurantList = async (req, res) => {
+  try {
+    const restaurantList = await Restaurant.find(); // Fetch all documents
+    res.status(200).json({ success: true, data: restaurantList });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
