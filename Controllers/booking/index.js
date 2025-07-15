@@ -129,24 +129,100 @@ exports.getAllBookings = async (req, res) => {
     // 🧠 Use aggregation to sort by combined date + time
     const bookings = await Booking.aggregate([
       { $match: match },
-      {
-        $addFields: {
-          // Combine `date` and `time` into a full datetime
-          bookingDateTime: {
-            $dateFromString: {
-              dateString: {
-                $concat: [
-                  { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                  "T",
-                  "$time",
-                  ":00", // Assuming time format is "HH:mm"
-                ],
-              },
-            },
-          },
-        },
-      },
-      { $sort: { bookingDateTime: -1 } }, // Sort by latest booking datetime
+      // {
+      //   $addFields: {
+      //     bookingDateTime: {
+      //       $dateFromString: {
+      //         dateString: {
+      //           $concat: [
+      //             { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+      //             "T",
+      //             {
+      //               $let: {
+      //                 vars: {
+      //                   parts: { $split: ["$time", " "] }, // ["12:30", "PM"]
+      //                 },
+      //                 in: {
+      //                   $let: {
+      //                     vars: {
+      //                       hourMinute: { $arrayElemAt: ["$$parts", 0] }, // "12:30"
+      //                       ampm: { $arrayElemAt: ["$$parts", 1] },
+      //                     },
+      //                     in: {
+      //                       $let: {
+      //                         vars: {
+      //                           hour: {
+      //                             $toInt: {
+      //                               $arrayElemAt: [
+      //                                 { $split: ["$$hourMinute", ":"] },
+      //                                 0,
+      //                               ],
+      //                             },
+      //                           },
+      //                           minute: {
+      //                             $arrayElemAt: [
+      //                               { $split: ["$$hourMinute", ":"] },
+      //                               1,
+      //                             ],
+      //                           },
+      //                         },
+      //                         in: {
+      //                           $let: {
+      //                             vars: {
+      //                               finalHour: {
+      //                                 $cond: [
+      //                                   { $eq: ["$$ampm", "AM"] },
+      //                                   {
+      //                                     $cond: [
+      //                                       { $eq: ["$$hour", 12] },
+      //                                       "00", // 12 AM → 00
+      //                                       {
+      //                                         $cond: [
+      //                                           { $lt: ["$$hour", 10] },
+      //                                           {
+      //                                             $concat: [
+      //                                               "0",
+      //                                               { $toString: "$$hour" },
+      //                                             ],
+      //                                           },
+      //                                           { $toString: "$$hour" },
+      //                                         ],
+      //                                       },
+      //                                     ],
+      //                                   },
+      //                                   {
+      //                                     $cond: [
+      //                                       { $eq: ["$$hour", 12] },
+      //                                       "12", // 12 PM → 12
+      //                                       {
+      //                                         $toString: {
+      //                                           $add: ["$$hour", 12],
+      //                                         },
+      //                                       }, // e.g. 1 PM → 13
+      //                                     ],
+      //                                   },
+      //                                 ],
+      //                               },
+      //                             },
+      //                             in: {
+      //                               $concat: ["$$finalHour", ":", "$$minute"],
+      //                             },
+      //                           },
+      //                         },
+      //                       },
+      //                     },
+      //                   },
+      //                 },
+      //               },
+      //             },
+      //             ":00",
+      //           ],
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      { $sort: { createdAt: -1 } }, // Sort by latest booking datetime
       {
         $lookup: {
           from: "restaurants",
