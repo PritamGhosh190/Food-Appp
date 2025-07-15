@@ -1,6 +1,9 @@
-const router = require('express').Router()
-const {userAuth, checkRole, serializeUser} = require('../../Controllers/auth')
-
+const router = require("express").Router();
+const {
+  userAuth,
+  checkRole,
+  serializeUser,
+} = require("../../Controllers/auth");
 
 const {
   addUser,
@@ -10,51 +13,51 @@ const {
   getUsers,
   addAddress,
   coupon,
-} = require('../../Controllers/users/index')
+} = require("../../Controllers/users/index");
 
-router.get('/', async (req, res) => {
-  return res.send('User service running...')
-})
+router.get("/", async (req, res) => {
+  return res.send("User service running...");
+});
 
-router.post('/add', async (req, res) => {
+router.post("/add", async (req, res) => {
   // console.log("bgcfgcxfgdcxdxg123");
-  await addUser(req, res)
-})
+  await addUser(req, res);
+});
 
-router.post('/addAddress', userAuth,async (req, res) => {
+router.post("/addAddress", userAuth, async (req, res) => {
   // console.log("bgcfgcxfgdcxdxg123");
-  await addAddress(req, res)
-})
+  await addAddress(req, res);
+});
 
-router.get('/user', async (req, res) => {
-  await getUser(req, res)
-})
+router.get("/user", async (req, res) => {
+  await getUser(req, res);
+});
 
-router.post('/get-users', async (req, res) => {
-  await getUsers(req, res)
-})
+router.post("/get-users", async (req, res) => {
+  await getUsers(req, res);
+});
 
-router.put('/update/:userId', async (req, res) => {
-  await updateUser(req, res)
-})
+router.put("/update/:userId", async (req, res) => {
+  await updateUser(req, res);
+});
 
-router.delete('/delete/:userId', async (req, res) => {
-  await removeUser(req, res)
-})
+router.delete("/delete/:userId", async (req, res) => {
+  await removeUser(req, res);
+});
 
-router.post('/coupon', coupon.createCoupon);
-router.get('/coupon', coupon.getAllCoupons);
-router.get('/coupon/:id', coupon.getCouponById);
-router.put('/coupon/:id', coupon.updateCoupon);
-router.delete('/coupon/:id', coupon.deleteCoupon);
+router.post("/coupon", coupon.createCoupon);
+router.get("/coupon", coupon.getAllCoupons);
+router.get("/allCoupon", coupon.getCoupons);
+router.get("/coupon/:id", coupon.getCouponById);
+router.put("/coupon/:id", coupon.updateCoupon);
+router.delete("/coupon/:id", coupon.deleteCoupon);
 
 // extra: get coupon by code for applying checkCouponApplicability
-router.get('/code/:code', coupon.getCouponByCode);
+router.get("/code/:code", coupon.getCouponByCode);
 
-router.post('/coupon/checkEligibility', userAuth,async (req, res) => {
+router.post("/coupon/checkEligibility", userAuth, async (req, res) => {
   // console.log("bgcfgcxfgdcxdxg123");
-  await coupon.checkCouponApplicability(req, res)
-})
+  await coupon.checkCouponApplicability(req, res);
+});
 
-
-module.exports = router
+module.exports = router;
