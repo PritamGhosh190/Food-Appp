@@ -248,7 +248,7 @@ exports.updaterestaurant = async (req, res) => {
 
 exports.getAllRestaurants1 = async (req, res) => {
   try {
-    // console.log(req.user, "User Details");
+    console.log(req.user, "User Details");
 
     // Define the query condition based on user type
     let query = {};
@@ -408,6 +408,17 @@ exports.getAllRestaurants = async (req, res) => {
         if (r.image) {
           r.image = baseUrl + r.image.replace(/\\+/g, "/");
         }
+        return r;
+      });
+
+      return res.status(200).json(formatted);
+    }
+    if (role === "admin") {
+      // Admin: Get all restaurants
+      const restaurants = await Restaurant.find().populate("assignUser");
+
+      const formatted = restaurants.map((r) => {
+        r.image = baseUrl + r.image.replace(/\\+/g, "/");
         return r;
       });
 
