@@ -256,7 +256,7 @@ exports.getAllBookings = async (req, res) => {
 // Fetch all delivery settings (optionally only non-deleted)
 exports.getDeliverySettings = async (req, res) => {
   try {
-    const settings = await DeliverySetting.find({ is_deleted: false });
+    const settings = await DeliverySetting.findOne({ is_deleted: false });
 
     if (!settings || settings.length === 0) {
       return res.status(404).json({ message: "No delivery settings found." });
