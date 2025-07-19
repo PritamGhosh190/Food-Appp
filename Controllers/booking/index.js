@@ -1,6 +1,7 @@
 const Booking = require("../../models/Booking");
 const Restaurant = require("../../models/Restaurant");
 const mongoose = require("mongoose");
+const DeliverySetting = require("../../models/DeliveryMaster");
 
 // Create a new booking
 exports.createBooking = async (req, res) => {
@@ -247,5 +248,23 @@ exports.getAllBookings = async (req, res) => {
   } catch (error) {
     console.error("Error fetching bookings:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// controllers/deliverySettingController.js
+
+// Fetch all delivery settings (optionally only non-deleted)
+exports.getDeliverySettings = async (req, res) => {
+  try {
+    const settings = await DeliverySetting.find({ is_deleted: false });
+
+    if (!settings || settings.length === 0) {
+      return res.status(404).json({ message: "No delivery settings found." });
+    }
+
+    res.status(200).json({ success: true, data: settings });
+  } catch (error) {
+    console.error("Error fetching delivery settings:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
