@@ -11,7 +11,7 @@ const {
   updateUser,
   removeUser,
   getUsers,
-  addAddress,
+  address,
   coupon,
 } = require("../../Controllers/users/index");
 
@@ -26,7 +26,11 @@ router.post("/add", async (req, res) => {
 
 router.post("/addAddress", userAuth, async (req, res) => {
   // console.log("bgcfgcxfgdcxdxg123");
-  await addAddress(req, res);
+  await address.addAddress(req, res);
+});
+router.get("/address", userAuth, async (req, res) => {
+  // console.log("bgcfgcxfgdcxdxg123");
+  await address.getUserAddresses(req, res);
 });
 
 router.get("/user", async (req, res) => {

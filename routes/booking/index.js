@@ -8,6 +8,7 @@ const {
   cancelBooking,
   getAllBookings,
   getDeliverySettings,
+  updateDeliverySetting,
 } = require("../../Controllers/booking");
 
 // Create a new booking
@@ -17,6 +18,7 @@ router.post("/", createBooking);
 router.get("/user/:userId", getUserBookings);
 router.get("/", getAllBookings);
 router.get("/deliverySettings", getDeliverySettings);
+router.put("/deliverySettings/:id", updateDeliverySetting);
 
 // Get all bookings for a restaurant
 router.get("/restaurant/:restaurantId", getRestaurantBookings);

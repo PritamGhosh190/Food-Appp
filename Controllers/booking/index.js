@@ -268,3 +268,33 @@ exports.getDeliverySettings = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+exports.updateDeliverySetting = async (req, res) => {
+  console.log(
+    "Updating delivery setting with ID:",
+    req.params,
+    "and data:",
+    req.body
+  );
+
+  try {
+    const { id } = req.params;
+
+    const updatedSetting = await DeliverySetting.findByIdAndUpdate(
+      id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSetting) {
+      return res.status(404).json({ message: "Delivery setting not found" });
+    }
+
+    return res.status(200).json(updatedSetting);
+  } catch (error) {
+    console.error("Error updating delivery setting:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
