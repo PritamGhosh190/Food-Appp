@@ -1,5 +1,3 @@
-// models/DeliverySetting.js
-
 const mongoose = require("mongoose");
 
 const deliverySettingSchema = new mongoose.Schema(
@@ -29,6 +27,14 @@ const deliverySettingSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    Cgst: {
+      type: String,
+      default: "0%", // or "2.5%" if you prefer
+    },
+    Sgst: {
+      type: String,
+      default: "0%",
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -40,7 +46,7 @@ const deliverySettingSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 
@@ -48,4 +54,5 @@ const DeliverySetting = mongoose.model(
   "DeliverySetting",
   deliverySettingSchema
 );
+
 module.exports = DeliverySetting;

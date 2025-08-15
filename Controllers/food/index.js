@@ -81,6 +81,76 @@ exports.createFood = async (req, res) => {
   }
 };
 
+exports.createFoodMulti = async (req, res) => {
+  try {
+    const {
+      name,
+      restaurant,
+      price,
+      rating,
+      description = "",
+      available = true,
+      stock = 0,
+      isTrainding,
+    } = req.body;
+
+    // Parse fields that might be strings or arrays
+    const parseArray = (field) => {
+      if (typeof field === "string") {
+        try {
+          const parsed = JSON.parse(field);
+          return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+          return [field]; // fallback: single string to array
+        }
+      }
+      return Array.isArray(field) ? field : [field];
+    };
+
+    const category = parseArray(req.body.category);
+    const type = parseArray(req.body.type);
+    const cuisineType = parseArray(req.body.cuisineType);
+    const ingredients = parseArray(req.body.ingredients ?? []);
+    const restaurantIds = parseArray(restaurant); // handles single or multiple restaurants
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    const image = req.file.path;
+
+    // Create a food item for each restaurant ID
+    const foodDocs = restaurantIds.map((restId) => ({
+      name,
+      restaurant: restId,
+      image,
+      price,
+      rating,
+      category,
+      type,
+      cuisineType,
+      description,
+      ingredients,
+      available,
+      stock,
+      isTrainding,
+    }));
+
+    const savedFoods = await Food.insertMany(foodDocs);
+
+    return res.status(201).json({
+      message: `Food detail created for ${restaurantIds.length} restaurant(s)`,
+      food: savedFoods,
+    });
+  } catch (error) {
+    console.error("Error creating food detail:", error);
+    return res.status(400).json({
+      message: "Error creating food detail",
+      error: error.message,
+    });
+  }
+};
+
 // Get all food details with optional filters
 exports.getAllFoods1 = async (req, res) => {
   try {
@@ -323,6 +393,8 @@ exports.getAllFoods1 = async (req, res) => {
 };
 
 exports.getAllFoods = async (req, res) => {
+  console.log("Fetching all foods with filters...", req.query.restaurantId);
+
   try {
     const {
       name,
@@ -344,6 +416,7 @@ exports.getAllFoods = async (req, res) => {
     if (restaurantId) {
       restaurantMatch._id = new mongoose.Types.ObjectId(restaurantId);
     }
+    console.log("restaurantMatch", restaurantMatch);
 
     const foodMatch = {};
 
@@ -394,7 +467,11 @@ exports.getAllFoods = async (req, res) => {
     const pipeline = [];
 
     // Step 1: Geo or ID filter
-    if (lat && lng) {
+
+    if (Object.keys(restaurantMatch).length > 0) {
+      pipeline.push({ $match: restaurantMatch });
+      pipeline.push({ $limit: 1 });
+    } else if (lat && lng) {
       pipeline.push({
         $geoNear: {
           near: {
@@ -407,11 +484,9 @@ exports.getAllFoods = async (req, res) => {
         },
       });
       pipeline.push({ $limit: 1 });
-    } else if (Object.keys(restaurantMatch).length > 0) {
-      pipeline.push({ $match: restaurantMatch });
-      pipeline.push({ $limit: 1 });
     }
 
+    console.log("Pipeline after geo or ID filter:", pipeline);
     // Step 2: Join foods
     pipeline.push({
       $lookup: {
@@ -537,6 +612,215 @@ exports.getAllFoods = async (req, res) => {
     });
   }
 };
+
+// exports.getAllFoods = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       cuisineType,
+//       category,
+//       ingredients,
+//       type,
+//       restaurantId,
+//       lat,
+//       lng,
+//       page = 1,
+//       limit = 10,
+//     } = req.query;
+
+//     const skip = (parseInt(page) - 1) * parseInt(limit);
+//     const parsedLimit = parseInt(limit);
+
+//     // Prepare food match filters
+//     const foodMatch = {};
+
+//     if (cuisineType) {
+//       const cuisineArray = Array.isArray(cuisineType)
+//         ? cuisineType
+//         : [cuisineType];
+//       foodMatch["foods.cuisineType"] = {
+//         $in: cuisineArray.map((item) => new RegExp(`^${item}$`, "i")),
+//       };
+//     }
+
+//     if (category) {
+//       const categoryArray = Array.isArray(category) ? category : [category];
+//       foodMatch["foods.category"] = {
+//         $in: categoryArray.map((item) => new RegExp(`^${item}$`, "i")),
+//       };
+//     }
+
+//     if (type) {
+//       const typeArray = Array.isArray(type) ? type : [type];
+//       foodMatch["foods.type"] = {
+//         $in: typeArray.map((item) => new RegExp(`^${item}$`, "i")),
+//       };
+//     }
+
+//     if (ingredients) {
+//       const ingredientArray = Array.isArray(ingredients)
+//         ? ingredients
+//         : [ingredients];
+//       foodMatch["foods.ingredients"] = {
+//         $in: ingredientArray.map((item) => new RegExp(`^${item}$`, "i")),
+//       };
+//     }
+
+//     if (name) {
+//       const rawName = Array.isArray(name) ? name[0] : name;
+//       const safeName = typeof rawName === "string" ? rawName : String(rawName);
+//       const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+//       foodMatch["foods.name"] = {
+//         $regex: escapeRegex(safeName),
+//         $options: "i",
+//       };
+//     }
+
+//     // -------- Build main aggregation pipeline --------
+//     const pipeline = [];
+
+//     // Step 1: Geo filter (optional)
+//     if (lat && lng) {
+//       pipeline.push({
+//         $geoNear: {
+//           near: {
+//             type: "Point",
+//             coordinates: [parseFloat(lng), parseFloat(lat)],
+//           },
+//           distanceField: "distance",
+//           spherical: true,
+//         },
+//       });
+//     }
+
+//     // Step 2: Join foods
+//     pipeline.push({
+//       $lookup: {
+//         from: "foods",
+//         localField: "_id",
+//         foreignField: "restaurant",
+//         as: "foods",
+//       },
+//     });
+
+//     // Step 3: Unwind foods
+//     pipeline.push({ $unwind: "$foods" });
+
+//     // Step 4: Combine restaurantId and food filters in a single $match
+//     const combinedMatch = { ...foodMatch };
+//     if (restaurantId) {
+//       combinedMatch["_id"] = new mongoose.Types.ObjectId(restaurantId);
+//     }
+//     if (Object.keys(combinedMatch).length > 0) {
+//       pipeline.push({ $match: combinedMatch });
+//     }
+
+//     // Step 5: Project final format
+//     pipeline.push({
+//       $project: {
+//         _id: 0,
+//         restaurant: {
+//           id: "$_id",
+//           name: "$name",
+//           location: "$location",
+//           distance: "$distance",
+//         },
+//         food: "$foods",
+//       },
+//     });
+
+//     // -------- Clone for counting total before pagination --------
+//     const countPipeline = [...pipeline];
+//     countPipeline.push({ $count: "total" });
+
+//     const countResult = await Restaurant.aggregate(countPipeline);
+//     const totalFoods = countResult.length > 0 ? countResult[0].total : 0;
+
+//     // -------- Add pagination stages to main pipeline --------
+//     pipeline.push({ $skip: skip });
+//     pipeline.push({ $limit: parsedLimit });
+
+//     const results = await Restaurant.aggregate(pipeline);
+
+//     if (!results.length) {
+//       return res.status(200).json({
+//         data: [],
+//         page: parseInt(page),
+//         limit: parsedLimit,
+//         count: 0,
+//         total: 0,
+//         trendingFood: [],
+//       });
+//     }
+
+//     // Get closest restaurant ID from result
+//     const closestRestaurantId = results[0].restaurant.id;
+
+//     // -------- Trending food query --------
+//     const trendingFoods = await Food.aggregate([
+//       {
+//         $match: {
+//           isTrainding: true,
+//           isDeleted: false,
+//           restaurant: new mongoose.Types.ObjectId(closestRestaurantId),
+//         },
+//       },
+//       {
+//         $sort: {
+//           name: 1,
+//           createdAt: -1,
+//           _id: 1,
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$name",
+//           doc: { $first: "$$ROOT" },
+//         },
+//       },
+//       { $replaceRoot: { newRoot: "$doc" } },
+//       {
+//         $sort: {
+//           createdAt: -1,
+//           _id: 1,
+//         },
+//       },
+//       { $limit: 10 },
+//     ]);
+
+//     // -------- Format results --------
+//     const processed = results.map((item) => {
+//       if (item.food.image) {
+//         item.food.image =
+//           process.env.IMAGEURL + item.food.image.replace(/\\+/g, "/");
+//       }
+//       return item;
+//     });
+
+//     const trendingFood = trendingFoods.map((item) => {
+//       if (item.image) {
+//         item.image = process.env.IMAGEURL + item.image.replace(/\\+/g, "/");
+//       }
+//       return item;
+//     });
+
+//     res.status(200).json({
+//       data: processed,
+//       page: parseInt(page),
+//       limit: parsedLimit,
+//       count: processed.length,
+//       total: totalFoods,
+//       trendingFood,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({
+//       message: "Error fetching food list",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // Get a specific food detail by ID
 exports.getFoodById = async (req, res) => {
@@ -1068,3 +1352,52 @@ exports.duplicateFoodToAllRestaurants = async () => {
   //   // mongoose.connection.close();
   // }
 };
+exports.syncFoodsFromRestaurant = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+
+    // Step 1: Fetch all foods from the given restaurant
+    const sourceFoods = await Food.find({ restaurantId });
+
+    if (sourceFoods.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No food found for this restaurant" });
+    }
+
+    // Step 2: Delete all foods from other restaurants
+    await Food.deleteMany({ restaurantId: { $ne: restaurantId } });
+
+    // Step 3: Get all restaurant IDs except the source
+    const allRestaurants = await Restaurant.find({}, "_id");
+    const otherRestaurantIds = allRestaurants
+      .map((r) => r._id.toString())
+      .filter((id) => id !== restaurantId);
+
+    // Step 4: Duplicate the source foods for other restaurants
+    const duplicatedFoods = [];
+
+    otherRestaurantIds.forEach((restId) => {
+      sourceFoods.forEach((food) => {
+        const { _id, createdAt, updatedAt, __v, ...rest } = food.toObject(); // remove Mongo-specific fields
+        duplicatedFoods.push({ ...rest, restaurantId: restId });
+      });
+    });
+
+    // Step 5: Insert duplicated foods
+    await Food.insertMany(duplicatedFoods);
+
+    res
+      .status(200)
+      .json({ message: "Food synced to all restaurants successfully!" });
+  } catch (error) {
+    console.error("Sync Error:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+// ...existing code...
+
+// ...existing code...
