@@ -393,7 +393,7 @@ exports.getAllFoods1 = async (req, res) => {
 };
 
 exports.getAllFoods = async (req, res) => {
-  console.log("Fetching all foods with filters...", req.query.restaurantId);
+  // console.log("Fetching all foods with filters...", req.query.restaurantId);
 
   try {
     const {
@@ -416,7 +416,7 @@ exports.getAllFoods = async (req, res) => {
     if (restaurantId) {
       restaurantMatch._id = new mongoose.Types.ObjectId(restaurantId);
     }
-    console.log("restaurantMatch", restaurantMatch);
+    // console.log("restaurantMatch", restaurantMatch);
 
     // const foodMatch = {};
     const foodMatch = { "foods.isDeleted": false };
@@ -487,7 +487,7 @@ exports.getAllFoods = async (req, res) => {
       pipeline.push({ $limit: 1 });
     }
 
-    console.log("Pipeline after geo or ID filter:", pipeline);
+    // console.log("Pipeline after geo or ID filter:", pipeline);
     // Step 2: Join foods
     pipeline.push({
       $lookup: {
