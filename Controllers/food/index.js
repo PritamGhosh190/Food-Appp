@@ -418,7 +418,8 @@ exports.getAllFoods = async (req, res) => {
     }
     console.log("restaurantMatch", restaurantMatch);
 
-    const foodMatch = {};
+    // const foodMatch = {};
+    const foodMatch = { "foods.isDeleted": false };
 
     if (cuisineType) {
       const cuisineArray = Array.isArray(cuisineType)
