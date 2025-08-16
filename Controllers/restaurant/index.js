@@ -120,6 +120,8 @@ exports.createrestaurant = async (req, res) => {
 
 exports.getRestaurantAndFoods = async (req, res) => {
   try {
+    // console.log("hghghg");
+
     // If an image is uploaded, we add it to the update
     const restaurant = await Restaurant.findOne({
       assignUser: new mongoose.Types.ObjectId(req.user.userId),
