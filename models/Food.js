@@ -106,12 +106,12 @@ const foodSchema = new mongoose.Schema(
   }
 );
 
-foodSchema.pre(/^find/, function (next) {
-  this.where({
-    $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }],
-  });
-  next();
-});
+// foodSchema.pre(/^find/, function (next) {
+//   this.where({
+//     $or: [{ isDeleted: false }, { isDeleted: { $exists: false } }],
+//   });
+//   next();
+// });
 
 const Food = mongoose.model("Food", foodSchema);
 

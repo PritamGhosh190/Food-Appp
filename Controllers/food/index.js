@@ -825,7 +825,7 @@ exports.getAllFoods = async (req, res) => {
 
 // Get a specific food detail by ID
 exports.getFoodById = async (req, res) => {
-  // console.log("vhfhffhfhvvhgh");
+  console.log("vhfhffhfhvvhgh");
 
   try {
     const food = await Food.findById(req.params.id).populate("restaurant"); // Populate restaurant details if needed;

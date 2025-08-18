@@ -238,6 +238,8 @@ const addAddress2 = async (req, res) => {
 };
 
 exports.addAddress = async (req, res) => {
+  console.log("Received address payload:", req.body);
+
   try {
     const {
       mobileNumber,

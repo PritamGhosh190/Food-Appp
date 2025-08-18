@@ -120,7 +120,7 @@ exports.createrestaurant = async (req, res) => {
 
 exports.getRestaurantAndFoods = async (req, res) => {
   try {
-    // console.log("hghghg");
+    console.log("hghghg");
 
     // If an image is uploaded, we add it to the update
     const restaurant = await Restaurant.findOne({
@@ -132,7 +132,7 @@ exports.getRestaurantAndFoods = async (req, res) => {
       const foods = await Food.find({
         restaurant: new mongoose.Types.ObjectId(restaurant.id),
       });
-      // console.log("gghjjgjgjh",foods);
+      console.log("gghjjgjgjh", foods.length);
       if (foods) {
         const resultFood = foods.map((food) => {
           // const updatedPath = filePath.replace(/\\+/g, '/');
@@ -150,45 +150,64 @@ exports.getRestaurantAndFoods = async (req, res) => {
 };
 
 exports.updaterestaurant = async (req, res) => {
+  console.log("Updating restaurant with body:", req.body);
+
   try {
     const restaurantId = req.params.id;
 
     const parseArrayField = (field) => {
-      if (!field) return [];
+      if (field === undefined || field === null) return undefined;
       if (Array.isArray(field)) return field;
       try {
-        return JSON.parse(field);
+        const parsed = JSON.parse(field);
+        return Array.isArray(parsed) ? parsed : [parsed];
       } catch {
-        // If not JSON parseable, treat as single value in array
         return [field];
       }
     };
 
-    // Parse fields to arrays if necessary
-    const categories = req.body.category
-      ? parseArrayField(req.body.category)
-      : undefined;
-    const types = req.body.type ? parseArrayField(req.body.type) : undefined;
-    const cuisineTypes = req.body.cuisineType
-      ? parseArrayField(req.body.cuisineType)
-      : undefined;
+    const parseBool = (val) => {
+      if (val === undefined) return undefined;
+      if (typeof val === "boolean") return val;
+      if (typeof val === "string") {
+        const lower = val.toLowerCase();
+        if (lower === "true") return true;
+        if (lower === "false") return false;
+      }
+      return Boolean(val);
+    };
 
-    // Find the existing restaurant first
+    const isValidObjectId = (id) => {
+      // Accept only 24 hex char strings; tweak if using mongoose.isValidObjectId
+      return typeof id === "string" && /^[a-fA-F0-9]{24}$/.test(id);
+    };
+
+    // Parse complex fields
+    const categories = parseArrayField(req.body.category);
+    const types = parseArrayField(req.body.type);
+    const cuisineTypes = parseArrayField(req.body.cuisineType);
+
+    // Parse booleans
+    const isActive = parseBool(req.body.isActive);
+    const isDelivery = parseBool(req.body.isDelivery);
+    const isTakeaway = parseBool(req.body.isTakeaway);
+    const isDineIn = parseBool(req.body.isDineIn);
+
+    // Find existing
     const existingRestaurant = await Restaurant.findById(restaurantId);
     if (!existingRestaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    // Update image if new file is uploaded
+    // Handle image
     if (req.file) {
       req.body.image = req.file.path;
     }
 
-    // If lat/lng are provided, no need to fetch from address
+    // Geocoding if needed
     if (req.body.lat && req.body.lng) {
-      // continue as normal
+      // use provided
     } else if (req.body.address) {
-      // Get lat/lng from address
       const geoApiUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
         req.body.address
       )}&key=${process.env.GOOGLEAPIKEY}`;
@@ -214,12 +233,15 @@ exports.updaterestaurant = async (req, res) => {
       }
     }
 
-    // Prepare update payload
+    // Build update payload, preserving existing values when undefined
     const updateData = {
-      name: req.body.name || existingRestaurant.name,
-      image: req.body.image || existingRestaurant.image,
-      address: req.body.address || existingRestaurant.address,
-      rating: req.body.rating || existingRestaurant.rating,
+      name: req.body.name ?? existingRestaurant.name,
+      image: req.body.image ?? existingRestaurant.image,
+      address: req.body.address ?? existingRestaurant.address,
+      rating:
+        req.body.rating !== undefined
+          ? Number(req.body.rating)
+          : existingRestaurant.rating,
       category:
         categories !== undefined ? categories : existingRestaurant.category,
       type: types !== undefined ? types : existingRestaurant.type,
@@ -227,22 +249,62 @@ exports.updaterestaurant = async (req, res) => {
         cuisineTypes !== undefined
           ? cuisineTypes
           : existingRestaurant.cuisineType,
-      location: req.body.location || existingRestaurant.location,
-      lat: req.body.lat || existingRestaurant.lat,
-      lng: req.body.lng || existingRestaurant.lng,
-      assignUser: req.body.assignedUser || existingRestaurant.assignUser,
+      location: req.body.location ?? existingRestaurant.location,
+      lat:
+        req.body.lat !== undefined
+          ? Number(req.body.lat)
+          : existingRestaurant.lat,
+      lng:
+        req.body.lng !== undefined
+          ? Number(req.body.lng)
+          : existingRestaurant.lng,
+      // Booleans
+      isActive: isActive !== undefined ? isActive : existingRestaurant.isActive,
+      isDelivery:
+        isDelivery !== undefined ? isDelivery : existingRestaurant.isDelivery,
+      isTakeaway:
+        isTakeaway !== undefined ? isTakeaway : existingRestaurant.isTakeaway,
+      isDineIn: isDineIn !== undefined ? isDineIn : existingRestaurant.isDineIn,
     };
 
-    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
-      restaurantId,
-      updateData,
-      { new: true }
-    );
+    // Handle assignUser safely:
+    // - Ignore empty string or null/undefined
+    // - Only set when a valid ObjectId is provided
+    // If you want to allow clearing, send a dedicated flag like clearAssignedUser=true
+    const { assignedUser, clearAssignedUser } = req.body;
 
-    res.status(200).json(updatedRestaurant);
+    if (clearAssignedUser === "true" || clearAssignedUser === true) {
+      updateData.assignUser = undefined;
+      // If the field exists and you want to unset it: use $unset below instead of setting undefined.
+    } else if (isValidObjectId(assignedUser)) {
+      updateData.assignUser = assignedUser;
+    } else {
+      // keep existing if invalid/empty was sent
+      updateData.assignUser = existingRestaurant.assignUser;
+    }
+
+    // If you need to truly remove assignUser when clearing:
+    // Use findByIdAndUpdate with $unset when clearAssignedUser is true
+    let updatedRestaurant;
+    if (clearAssignedUser === "true" || clearAssignedUser === true) {
+      const { assignUser, ...rest } = updateData;
+      updatedRestaurant = await Restaurant.findByIdAndUpdate(
+        restaurantId,
+        { $unset: { assignUser: "" }, $set: rest },
+        { new: true }
+      );
+    } else {
+      updatedRestaurant = await Restaurant.findByIdAndUpdate(
+        restaurantId,
+        updateData,
+        { new: true }
+      );
+    }
+
+    return res.status(200).json(updatedRestaurant);
   } catch (err) {
     console.error("Error updating restaurant:", err);
-    res
+    return res
       .status(500)
       .json({ message: "Error updating restaurant", error: err.message });
   }
