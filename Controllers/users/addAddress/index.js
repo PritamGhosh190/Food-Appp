@@ -237,7 +237,7 @@ const addAddress2 = async (req, res) => {
   }
 };
 
-exports.addAddress = async (req, res) => {
+exports.addAddress3 = async (req, res) => {
   console.log("Received address payload:", req.body);
 
   try {
@@ -382,6 +382,193 @@ exports.addAddress = async (req, res) => {
     });
 
     // Calculate distance for delivery
+    if (type === "delivery" && restaurant) {
+      const restaurantData = await Restaurant.findById(restaurant);
+      if (restaurantData) {
+        distance = haversineDistance(
+          lat,
+          lng,
+          restaurantData.lat,
+          restaurantData.lng
+        ).toFixed(2);
+      }
+    }
+
+    await newAddress.save();
+
+    return res.status(201).json({
+      message: "Address added successfully",
+      success: true,
+      newAddress,
+      distance: distance || undefined,
+    });
+  } catch (err) {
+    console.error("Address creation error:", err);
+    return res.status(500).json({
+      message: "Unable to add address",
+      error: err.message,
+      success: false,
+    });
+  }
+};
+
+exports.addAddress = async (req, res) => {
+  console.log("Received address payload:", req.body);
+
+  try {
+    const {
+      mobileNumber,
+      name,
+      address: inputAddress,
+      restaurant,
+      type,
+      apartment,
+      flat,
+      landmark,
+    } = req.body;
+
+    const role = req.user.role;
+    const userId = req.user.userId;
+
+    // ✅ Validate type
+    if (!type || !["delivery", "dineIn", "takeaway"].includes(type)) {
+      return res.status(400).json({
+        message:
+          "Invalid or missing address type. Must be one of: delivery, dineIn, takeaway",
+        success: false,
+      });
+    }
+
+    let lat = req.body.lat || null;
+    let lng = req.body.lng || null;
+    let address = inputAddress || null;
+    let distance = null;
+
+    // ✅ Delivery type requires at least address or coordinates
+    if (type === "delivery") {
+      if (!address && (!lat || !lng)) {
+        return res.status(400).json({
+          message:
+            "Either address or latitude/longitude is required for delivery type",
+          success: false,
+        });
+      }
+
+      // Reverse geocode if only lat/lng given
+      if (!address && lat && lng) {
+        const reverseGeoURL = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.GOOGLEAPIKEY}`;
+        const response = await superagent.get(reverseGeoURL);
+        const data = JSON.parse(response.text);
+
+        if (response.status === 200 && data?.plus_code?.compound_code) {
+          address = data.plus_code.compound_code;
+        } else {
+          return res.status(422).json({
+            message: "Unable to resolve coordinates to address",
+            success: false,
+          });
+        }
+      }
+
+      // Geocode if only address given
+      if (address && (!lat || !lng)) {
+        const geoURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address
+        )}&key=${process.env.GOOGLEAPIKEY}`;
+        const response = await superagent.get(geoURL);
+        const data = JSON.parse(response.text);
+
+        if (response.status === 200 && data.results[0]?.geometry?.location) {
+          lat = data.results[0].geometry.location.lat;
+          lng = data.results[0].geometry.location.lng;
+        } else {
+          return res.status(422).json({
+            message: "Unable to resolve address to coordinates",
+            success: false,
+          });
+        }
+      }
+
+      // ✅ Check for existing address at same lat/lng
+      const delta = 0.0001; // ~11 meters tolerance
+      let existingDelivery = await UserAddress.findOne({
+        userId,
+        type: "delivery",
+        lat: { $gte: lat - delta, $lte: lat + delta },
+        lng: { $gte: lng - delta, $lte: lng + delta },
+      });
+
+      if (existingDelivery) {
+        // Compare and update only if details differ
+        let needsUpdate = false;
+
+        const updatableFields = {
+          mobilenum: mobileNumber,
+          name,
+          apartment,
+          flat,
+          landmark,
+          address,
+        };
+
+        Object.keys(updatableFields).forEach((field) => {
+          if (
+            updatableFields[field] &&
+            updatableFields[field] !== existingDelivery[field]
+          ) {
+            existingDelivery[field] = updatableFields[field];
+            needsUpdate = true;
+          }
+        });
+
+        if (needsUpdate) {
+          await existingDelivery.save();
+        }
+
+        // Calculate distance to restaurant (if given)
+        if (restaurant) {
+          const restaurantData = await Restaurant.findById(restaurant);
+          if (restaurantData) {
+            distance = haversineDistance(
+              existingDelivery.lat,
+              existingDelivery.lng,
+              restaurantData.lat,
+              restaurantData.lng
+            ).toFixed(2);
+          }
+        }
+
+        return res.status(200).json({
+          message: needsUpdate
+            ? "Address updated successfully"
+            : "Address already exists, returning existing data",
+          success: true,
+          newAddress: existingDelivery,
+          distance: distance || undefined,
+        });
+      }
+    } else {
+      // dineIn / takeaway → no lat/lng required
+      lat = null;
+      lng = null;
+    }
+
+    // ✅ Create new address
+    const newAddress = new UserAddress({
+      mobilenum: mobileNumber,
+      userId,
+      name,
+      address: type === "delivery" ? address : null,
+      apartment: apartment || null,
+      flat: flat || null,
+      landmark: landmark || null,
+      lat,
+      lng,
+      role,
+      type,
+    });
+
+    // Calculate distance if restaurant given
     if (type === "delivery" && restaurant) {
       const restaurantData = await Restaurant.findById(restaurant);
       if (restaurantData) {
