@@ -10,7 +10,7 @@ const bookingSchema = new mongoose.Schema(
     name: { type: String, required: true },
     phone: { type: String, required: true },
     groupSize: { type: Number, required: true },
-    date: { type: Date, required: true },
+    date: { type: Date, required: true }, // full date (yyyy-mm-dd)
     time: { type: String, required: true }, // e.g., "19:30"
 
     restaurantId: {
@@ -38,6 +38,9 @@ const bookingSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// ✅ Compound Unique Index (userId + date)
+// bookingSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 // ✅ Pre-save hook to generate bookingId like BRD0001
 bookingSchema.pre("save", async function (next) {
