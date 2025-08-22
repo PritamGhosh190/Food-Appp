@@ -3,6 +3,9 @@ const FoodBilling = require("../../models/Billing");
 const Restaurant = require("../../models/Restaurant");
 const mongoose = require("mongoose");
 const Cart = require("../../models/Cart");
+const sendSms = require("../../config/sendSms");
+const generateOtp = require("../../config/generateOtp");
+
 const { log } = require("async");
 // const Restaurant = require('../models/restaurant');
 require("dotenv").config();
@@ -29,9 +32,12 @@ exports.createFoodBill = async (req, res) => {
       ...req.body,
     });
     // console.log("njdjncnkcjc",req.body);
-
+    const otp = generateOtp();
     await foodBill.save();
     await Cart.deleteMany({ user: req.user.userId });
+    await sendSms(req.user.mobileNumber, otp); // pass last 10-digit number
+    console.log("otp", otp, "gnvghc", req.user.mobileNumber);
+
     res
       .status(201)
       .json({ message: "Food Bill created successfully", data: foodBill });

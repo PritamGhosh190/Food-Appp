@@ -4,7 +4,21 @@ const mongoose = require("mongoose");
 const DeliverySetting = require("../../models/DeliveryMaster");
 
 // Create a new booking
-exports.createBooking = async (req, res) => {
+function parseTime12h(timeStr) {
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (modifier === "PM" && hours !== 12) {
+    hours += 12;
+  }
+  if (modifier === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return { hours, minutes };
+}
+
+exports.createBooking1 = async (req, res) => {
   try {
     const { name, phone, groupSize, date, time, restaurantId, additional } =
       req.body;
@@ -25,8 +39,98 @@ exports.createBooking = async (req, res) => {
     await booking.save();
     res.status(201).json({ message: "Booking created successfully", booking });
   } catch (error) {
-    console.error("Error creating booking:", error);
+    // console.error("Error creating booking:", error);
+    if (
+      error.code === 11000 &&
+      error.keyPattern?.userId &&
+      error.keyPattern?.date
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "You already have a booking for this date.",
+      });
+    }
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.createBooking = async (req, res) => {
+  try {
+    const { name, phone, groupSize, date, time, restaurantId, additional } =
+      req.body;
+    const userId = req.user.userId;
+
+    // ✅ Parse date + time into full Date object
+    const { hours, minutes } = parseTime12h(time);
+    const bookingDateTime = new Date(date);
+    bookingDateTime.setHours(hours, minutes, 0, 0);
+
+    // Find user's bookings for that date
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const userBookings = await Booking.find({
+      userId,
+      status: { $ne: "cancelled" },
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    // Rule 1: Max 2 bookings per day
+    if (userBookings.length >= 2) {
+      return res.status(400).json({
+        success: false,
+        message: "You can only make 2 bookings per day.",
+      });
+    }
+
+    // Rule 2: At least 4-hour gap
+    for (let b of userBookings) {
+      const { hours: bh, minutes: bm } = parseTime12h(b.time);
+      const existingBookingDateTime = new Date(b.date);
+      existingBookingDateTime.setHours(bh, bm, 0, 0);
+
+      const diffHours = Math.abs(
+        (bookingDateTime - existingBookingDateTime) / (1000 * 60 * 60)
+      );
+
+      if (diffHours < 4) {
+        return res.status(400).json({
+          success: false,
+          message: "There must be at least a 4-hour gap between your bookings.",
+        });
+      }
+    }
+
+    // ✅ Passed validation → create booking
+    const booking = new Booking({
+      name,
+      phone,
+      groupSize,
+      date,
+      time,
+      restaurantId,
+      userId,
+      additional,
+      status: "booked",
+    });
+
+    await booking.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Booking created successfully",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while creating booking",
+      error: error.message,
+    });
   }
 };
 
@@ -34,7 +138,10 @@ exports.createBooking = async (req, res) => {
 exports.getUserBookings = async (req, res) => {
   try {
     const { userId } = req.params;
-    const bookings = await Booking.find({ userId }).sort({ date: -1 });
+    const bookings = await Booking.find({
+      userId,
+      status: { $ne: "cancelled" }, // ✅ exclude cancelled
+    }).sort({ date: -1 });
     res.status(200).json(bookings);
   } catch (error) {
     res.status(500).json({ error: "Error fetching user bookings" });
@@ -82,6 +189,8 @@ exports.updateBookingStatus = async (req, res) => {
 
 // Cancel a booking
 exports.cancelBooking = async (req, res) => {
+  console.log("cancelling booking with ID:", req.params);
+
   try {
     const { id } = req.params;
 

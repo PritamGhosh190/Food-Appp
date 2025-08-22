@@ -27,6 +27,6 @@ router.get("/restaurant/:restaurantId", getRestaurantBookings);
 router.put("/:id/status", updateBookingStatus);
 
 // Cancel a booking
-router.delete("/:id", cancelBooking);
+router.get("/delete/:id", cancelBooking);
 
 module.exports = router;
