@@ -35,8 +35,8 @@ exports.createFoodBill = async (req, res) => {
     const otp = generateOtp();
     await foodBill.save();
     await Cart.deleteMany({ user: req.user.userId });
-    await sendSms(req.user.mobileNumber, otp); // pass last 10-digit number
-    console.log("otp", otp, "gnvghc", req.user.mobileNumber);
+    // await sendSms(req.user.mobileNumber, otp); // pass last 10-digit number
+    // console.log("otp", otp, "gnvghc", req.user.mobileNumber);
 
     res
       .status(201)
