@@ -220,7 +220,7 @@ const otpVerify1 = async (userRequest, res) => {
   }
 };
 
-const otpGenerate = async (req, res) => {
+const otpGenerate2 = async (req, res) => {
   try {
     const { mobileNumber } = req.body;
     if (!mobileNumber)
@@ -252,6 +252,58 @@ const otpGenerate = async (req, res) => {
     return res
       .status(200)
       .json({ message: "OTP sent successfully", success: true });
+  } catch (err) {
+    console.log("err", err);
+    return res
+      .status(500)
+      .json({ message: err.message || "OTP send failed", success: false });
+  }
+};
+
+const otpGenerate = async (req, res) => {
+  try {
+    const { mobileNumber } = req.body;
+    if (!mobileNumber)
+      return res.status(400).json({ message: "Mobile number is required" });
+
+    const phone = `+91${mobileNumber}`;
+
+    // Rate limit: block if OTP sent in last 1 min
+    const recentOtp = await Otp.findOne({ phone }).sort({ createdAt: -1 });
+    if (
+      recentOtp &&
+      Date.now() - new Date(recentOtp.createdAt).getTime() < 60 * 1000
+    ) {
+      return res
+        .status(429)
+        .json({ message: "Wait 60 seconds before requesting new OTP" });
+    }
+
+    // Clear previous entries
+    await Otp.deleteMany({ phone });
+
+    // ✅ Fixed OTP for specific test number
+    let otp;
+    if (mobileNumber === "9999999999") {
+      otp = "123456"; // always fixed OTP for testing
+    } else {
+      otp = generateOtp(); // normal flow for other users
+    }
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min expiry
+
+    await Otp.create({ phone, otp, expiresAt });
+
+    // For testing number, don't actually send SMS
+    if (mobileNumber !== "9999999999") {
+      await sendSms(mobileNumber, otp);
+    }
+
+    return res.status(200).json({
+      message: "OTP sent successfully",
+      success: true,
+      testOtp: mobileNumber === "9999999999" ? otp : undefined, // return in response for easy testing
+    });
   } catch (err) {
     console.log("err", err);
     return res
